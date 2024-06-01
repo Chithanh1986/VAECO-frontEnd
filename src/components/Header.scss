@@ -1,0 +1,19 @@
+.nav-header {
+    .bg-header {
+        background-color: #d1e7d1;
+    }
+
+    a {
+        color: black !important;
+
+        &:hover {
+            color: #f34a5b !important;
+        }
+    }
+
+    .nav-link {
+        &.active {
+            color: #f34a5b !important;
+        }
+    }
+}
