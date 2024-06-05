@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './Users.scss';
-import { fetchAllUsers, deleteUser } from '../services/UserService';
+import { fetchAllUsers, deleteUser, resetPassword, searchApi } from '../services/UserService';
 import ReactPaginate from 'react-paginate';
 import { toast } from 'react-toastify';
 import ModalDelete from './ModalDelete';
 import ModalUpdate from './ModalUpdate';
+import ModalResetPass from './ModalResetPass';
 
 const UserList = (props) => {
     const [listUsers, setListUsers] = useState([]);
@@ -15,13 +16,15 @@ const UserList = (props) => {
     const [dataModal, setDataModal] = useState({});
     const [isShowModalUpdate, setIsShowModalUpdate] = useState(false);
     const [dataModalUpdate, setDataModalUpdate] = useState({});
+    const [modalResetPassword, setModalResetPassword] = useState({});
+    const [isShowModalResetPassword, setIsShowModalResetPassword] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
 
     useEffect(() => {
         fetchUsers();
     }, [currentPage, isShowModalUpdate])
 
     const fetchUsers = async () => {
-
         let response = await fetchAllUsers(currentPage, currentLimit);
         if (response && response.EC === 0) {
             setTotalPages(response.DT.totalPages);
@@ -63,11 +66,70 @@ const UserList = (props) => {
         setIsShowModalUpdate(true);
     }
 
+    const handleResetPassword = (user) => {
+        setModalResetPassword(user);
+        setIsShowModalResetPassword(true);
+    }
+
+    const handleCloseResetPass = () => {
+        setIsShowModalResetPassword(false);
+        setModalResetPassword({});
+    }
+
+    const confirmResetPass = async () => {
+
+        let response = await resetPassword(modalResetPassword);
+        if (response && response.EC === 0) {
+            toast.success(response.EM)
+            await fetchUsers();
+            setIsShowModalResetPassword(false);
+        } else {
+            toast.error(response.EM)
+        }
+    }
+
+    const handleSearch = async (searchValue) => {
+        if (!searchValue) {
+            toast.error("Pls enter vaeco name or id for search");
+            return;
+        }
+        let response = await searchApi(searchValue);
+        let data = [response.DT];
+        if (response && response.EC === 0) {
+            //sucess
+            setTotalPages(1);
+            setListUsers(data);
+        } else {
+            toast.error(response.EM)
+        }
+
+    }
+
+    const handleClear = () => {
+        setSearchValue("");
+        fetchUsers();
+    }
+
     return (
         <>
             <div className='container'>
                 <div className='manage-users-container'>
                     <div className='user-header'>
+                        <div className='search-container' >
+                            <input
+                                type='text'
+                                placeholder='Search by vaeco user or vaeco id'
+                                value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)} />
+                            <button
+                                className='btn btn-info mx-1'
+                                onClick={() => handleSearch(searchValue)}
+                            >Search</button>
+                            <button
+                                className='btn btn-info'
+                                onClick={() => handleClear()}
+                            >Clear</button>
+                        </div>
                         <div className='title'><h3>Table users</h3></div>
                     </div>
                     <div className='users-body'>
@@ -94,7 +156,9 @@ const UserList = (props) => {
                                                     <td>{item.vae_id}</td>
                                                     <td>{item.group}</td>
                                                     <td>
-                                                        <button className='btn btn-warning'>Reset Pass</button>
+                                                        <button className='btn btn-warning'
+                                                            onClick={() => handleResetPassword(item)}
+                                                        >Reset Pass</button>
                                                         <button className='btn btn-warning mx-1'
                                                             onClick={() => handleUpdateUser(item)}
                                                         >Edit</button>
@@ -151,6 +215,12 @@ const UserList = (props) => {
                 onHide={onHideModalUpdate}
                 show={isShowModalUpdate}
                 dataModalUpdate={dataModalUpdate}
+            />
+            <ModalResetPass
+                show={isShowModalResetPassword}
+                handleClose={handleCloseResetPass}
+                confirmResetPass={confirmResetPass}
+                dataModal={modalResetPassword}
             />
         </>
     )

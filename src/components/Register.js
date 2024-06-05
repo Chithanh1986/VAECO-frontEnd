@@ -8,18 +8,12 @@ function Register() {
     const navigate = useNavigate();
     const [vae_user, setVaeUser] = useState("");
     const [vae_id, setVaeId] = useState("");
-    const [password, setPassword] = useState("");
-    const [rePassword, setRePassword] = useState("");
-    const [group, setGroup] = useState("");
-    const [isShowPassword, setIsShowPassword] = useState(false);
+    const password = "12345678";
+    const [group, setGroup] = useState("user");
 
     const isValidInputs = () => {
-        if (!vae_user || !vae_id || !password) {
+        if (!vae_user || !vae_id) {
             toast.error("input is required");
-            return false;
-        }
-        if (password !== rePassword) {
-            toast.error("Passwords are not same");
             return false;
         }
         return true;
@@ -61,46 +55,23 @@ function Register() {
                     type='text'
                     placeholder='E.g: 1234'
                     value={vae_id}
+                    onKeyPress={(event) => handlePressEnter(event)}
                     onChange={(event) => setVaeId(event.target.value)} />
 
                 <div className='text'>Group</div>
                 <select
                     className='form-select'
                     onChange={(event) => setGroup(event.target.value)}
+                    onKeyPress={(event) => handlePressEnter(event)}
                 >
-                    <option value="user">user</option>
+                    <option selected value="user">user</option>
                     <option value="leader">leader</option>
                     <option value="admin">admin</option>
                 </select>
-                {/* type='text'
-                    placeholder='Enter account type...'
-                    value={group}
-                    onChange={(event) => setGroupId(event.target.value)} */}
 
-                <div className='text'>Password</div>
-                <div className='input-2'>
-                    <input
-                        type={isShowPassword ? "text" : "password"}
-                        placeholder='Password...'
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)} />
-                    <i className={isShowPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
-                        onClick={() => setIsShowPassword(!isShowPassword)}></i>
-                </div>
+                <div className='text'>Default password: 12345678</div>
 
-                <div className='text'>Confirm password</div>
-                <div className='input-2'>
-                    <input
-                        type={isShowPassword ? "text" : "password"}
-                        placeholder='Re-enter password...'
-                        value={rePassword}
-                        onChange={(event) => setRePassword(event.target.value)}
-                        onKeyPress={(event) => handlePressEnter(event)} />
-                    <i className={isShowPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
-                        onClick={() => setIsShowPassword(!isShowPassword)}></i>
-                </div>
-
-                <button className={vae_user && vae_id && password && rePassword ? 'active' : ''}
+                <button className={vae_user && vae_id ? 'active' : ''}
                     onClick={() => handleRegister()}>Submit</button>
             </div >
         </div>
