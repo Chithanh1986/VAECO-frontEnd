@@ -4,19 +4,93 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
+import { flightPlantApi } from '../services/UserService';
 
 function FlightPlan() {
-    const [startDate, setStartDate] = useState(null);
+    const [date, setDate] = useState(null);
     const [data, setData] = useState(null);
 
     const handleClear = () => {
-        setStartDate(null);
+        setDate(null);
         setData(null);
         document.getElementById('file').value = '';
     }
 
-    const handleChange = () => {
+    const handleSplitShip = (newData, date) => {
 
+        let rev = new Date().toLocaleDateString('fr-FR') + " Time " + new Date().toLocaleTimeString('fr-FR');
+        //get flight data for morning ship
+        let flightShip1 = {
+            flightDate: new Date(date).toLocaleDateString('fr-FR'),
+            rev: rev,
+            ship: "MO",
+            flightData: []
+        }
+        let elementNo1 = 0;
+        for (var i = 0; i < newData.length; i++) {
+            let hour = newData[i][7].split(":")[0];
+            flightShip1.flightData[i] = newData[i];
+            if (hour !== "" && hour === "17") {
+                break;
+            }
+        }
+
+        //get flight data for evening ship
+        let flightShip2 = {
+            flightDate: new Date(date).toLocaleDateString('fr-FR'),
+            rev: rev,
+            ship: "EV",
+            flightData: []
+        }
+        let elementNo2 = 0;
+        for (var i = 0; i < newData.length; i++) {
+            let arrHour = parseInt(newData[i][7].split(":")[0], 10);
+            let depHour = parseInt(newData[i][8].split(":")[0], 10);
+            if (arrHour > 15 || depHour >= 16 || newData[i][8].includes("+")) {
+                flightShip2.flightData[elementNo2] = newData[i];
+                elementNo2++;
+            }
+        }
+        let splitShip = {
+            ship1: flightShip1,
+            ship2: flightShip2
+        }
+        return splitShip;
+    }
+
+    const handleUpload = async (data) => {
+        if (!date) { toast.error('Pls choose date') }
+        if (!data) { toast.error('Pls select file') }
+        if (date && data) {
+
+            //include notes into 1 cell
+            let newData = data.slice(2);
+            for (var i = 0; i < newData.length; i++) {
+                for (let j = 10; j < newData[i].length - 1; j++) {
+                    if (newData[i][j] !== "") {
+                        newData[i][9] = newData[i][9] + newData[i][j];
+                        newData[i][j] = "";
+                    }
+                }
+            }
+
+            //trim un-use cell
+            for (var i = 0; i < newData.length; i++) { newData[i] = newData[i].slice(0, 15); }
+
+            //split into 2 ship
+            let splitShip = handleSplitShip(newData, date);
+            let flightDataShip1 = splitShip.ship1;
+            let flightDataShip2 = splitShip.ship2;
+
+            // post data to server
+            let serverData = await flightPlantApi(flightDataShip1, flightDataShip2);
+            if (+serverData.EC === 0) {
+                toast.success(serverData.EM)
+                handleClear();
+            } else {
+                toast.error(serverData.EM)
+            }
+        }
     }
 
     const handleFileUpload = (e) => {
@@ -30,12 +104,17 @@ function FlightPlan() {
                 const sheet = workbook.Sheets[sheetName];
                 const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
                 // set "" for undifined element in data
-                for (let i = 0; i < sheetData.length; i++) {
+
+                for (var i = 0; i < sheetData.length; i++) {
                     for (let j = 0; j < sheetData[i].length; j++) {
                         if (sheetData[i][j] === undefined) {
                             sheetData[i][j] = "";
                         }
                     }
+                }
+                for (let i = 2; i < sheetData.length; i++) {
+                    for (let j = 0; j < sheetData[i].length; j++)
+                        sheetData[i][j] = sheetData[i][j].trim();
                 }
                 setData(sheetData);
             };
@@ -46,39 +125,42 @@ function FlightPlan() {
     }
 
     return (
-        <div className='container'>
-            <div className='title'><strong>Upload flight plan</strong></div>
-            <div className='flight-container col-12 col-sm-12'>
-                <label > Choose date  :</label>
-                <DatePicker
-                    selected={startDate}
-                    onChange={date => setStartDate(date)}
-                    minDate={new Date().setDate(new Date().getDate() - 1)}
-                    maxDate={new Date().setDate(new Date().getDate() + 1)}
-                />
+        <div>
+            <div className='container'>
+                <div className='title'><strong>Upload flight plan</strong></div>
+                <div className='flight-container col-12 col-sm-12'>
+                    <label > Choose date  :</label>
+                    <DatePicker
+                        selected={date}
+                        onChange={date => setDate(date)}
+                        minDate={new Date().setDate(new Date().getDate() - 1)}
+                        maxDate={new Date().setDate(new Date().getDate() + 1)}
+                        dateFormat="dd/MM/YYYY"
+                    />
 
-                <input
-                    type='file'
-                    className="form-control col-sm-4"
-                    id="file"
-                    // accept={SheetJSFT}
-                    onChange={handleFileUpload}
-                />
+                    <input
+                        type='file'
+                        className="form-control col-sm-4"
+                        id="file"
+                        // accept={SheetJSFT}
+                        onChange={handleFileUpload}
+                    />
 
-                <button className='btn'
-                    onClick={() => handleClear()}>Clear</button>
+                    <button className='btn'
+                        onClick={() => handleClear()}>Clear</button>
 
-                <button className={startDate && data ? 'btn active' : 'btn'}
-                    onClick={() => handleChange()}>Upload</button>
+                    <button className={date && data ? 'btn active' : 'btn'}
+                        onClick={() => handleUpload(data)}>Upload</button>
 
-            </div >
+                </div >
+            </div>
 
             {data && (
                 <div className='table-responsive'>
-                    <table className='table table-striped table-bordered' responsive >
+                    <table className='table-responsive table-striped table-bordered' responsive>
                         <tbody>
                             {data.map((individualData, index) => (
-                                <tr key={index}>
+                                <tr key={index} >
                                     {data[index].map((key) => (
                                         <th key={key}>{key}</th>
                                     ))

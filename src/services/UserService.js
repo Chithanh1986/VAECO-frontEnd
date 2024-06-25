@@ -1,7 +1,7 @@
 import instance from "../setup/axios"; //đã setup axios thành instance
 
 const registerApi = (vae_user, vae_id, password, group) => {
-    return instance.post("/api/register", { vae_user, vae_id, password, group })
+    return instance.post("/api/register", { vae_user, vae_id, password, group });
 }
 
 const loginApi = (vae_user, password) => {
@@ -40,7 +40,15 @@ const searchApi = (searchValue) => {
     return instance.post(`/api/search_user`, { searchValue });
 }
 
+const flightPlantApi = (flightShip1, flightShip2) => {
+    return instance.post("/api/flight_plan", { flightShip1, flightShip2 });
+}
+
+const loadPlanApi = (date, ship) => {
+    return instance.post(`/api/load_plan`, { date, ship });
+}
+
 export {
     registerApi, loginApi, fetchAllUsers, deleteUser, resetPassword, updateUser, logoutUser, getUserAccount,
-    changePassword, searchApi
+    changePassword, searchApi, flightPlantApi, loadPlanApi
 };

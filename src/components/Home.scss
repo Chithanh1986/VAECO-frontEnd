@@ -1,24 +1,9 @@
 .flight-container {
     display: flex;
     flex-direction: row;
-    // margin: 0 auto;
     align-items: center;
     padding: 10px;
     justify-content: center;
-
-    input {
-        // padding: 5px;
-        // outline: none;
-        // margin-bottom: 7px;
-        background: #1618230f;
-        border: none;
-        border-radius: 3px;
-        width: 50%;
-
-        &:hover {
-            background-color: #dedede;
-        }
-    }
 
     button {
         margin-left: 10px;
@@ -38,13 +23,29 @@
     }
 }
 
-.title {
-    text-align: center;
-    font-size: 23px;
-    font-weight: 600;
-    padding-top: 5px;
+.react-datepicker__input-container input {
+    display: block;
+    width: 90% !important;
 }
 
-table {
-    height: 20px;
+input {
+    // font-size: 16px;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    // padding: 12px 12px;
+    // font-family: 'Poppins', sans-serif;
+}
+
+input:hover {
+    background-color: #fffaf3;
+}
+
+input:focus {
+    outline: 1px solid #ccc;
+    border: 1px solid #ccc;
+}
+
+tr td {
+    padding: 2px;
 }
