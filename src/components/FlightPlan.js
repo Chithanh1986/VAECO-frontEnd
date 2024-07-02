@@ -24,14 +24,28 @@ function FlightPlan() {
             flightDate: new Date(date).toLocaleDateString('fr-FR'),
             rev: rev,
             ship: "MO",
-            flightData: []
+            flightData: [],
         }
         let elementNo1 = 0;
+        console.log(parseInt(newData[1][7].split(":")[0], 10))
         for (var i = 0; i < newData.length; i++) {
-            let hour = newData[i][7].split(":")[0];
-            flightShip1.flightData[i] = newData[i];
-            if (hour !== "" && hour === "17") {
-                break;
+            let arrHour = parseInt(newData[i][7].split(":")[0], 10);
+            let depHour = parseInt(newData[i][8].split(":")[0], 10);
+            if (isNaN(arrHour)) { //non arrHour
+                if (depHour >= 3 && depHour <= 16 && newData[i][8].includes("+") === false) {
+                    flightShip1.flightData[elementNo1] = newData[i];
+                    elementNo1++;
+                }
+            } else { // has arrHour
+                if (arrHour >= 3 && arrHour <= 16 && newData[i][7].includes("+") === false) { //arr 3h - 17h on today
+                    flightShip1.flightData[elementNo1] = newData[i];
+                    elementNo1++;
+                } else { //arr out 3h - 17h, check dep
+                    if (newData[i][8].includes("+") === false && depHour >= 3 && depHour <= 16) {
+                        flightShip1.flightData[elementNo1] = newData[i];
+                        elementNo1++;
+                    }
+                }
             }
         }
 
@@ -40,15 +54,48 @@ function FlightPlan() {
             flightDate: new Date(date).toLocaleDateString('fr-FR'),
             rev: rev,
             ship: "EV",
-            flightData: []
+            flightData: [],
         }
         let elementNo2 = 0;
         for (var i = 0; i < newData.length; i++) {
             let arrHour = parseInt(newData[i][7].split(":")[0], 10);
             let depHour = parseInt(newData[i][8].split(":")[0], 10);
-            if (arrHour > 15 || depHour >= 16 || newData[i][8].includes("+")) {
-                flightShip2.flightData[elementNo2] = newData[i];
-                elementNo2++;
+            if (isNaN(arrHour)) { //non arrHour
+                if (newData[i][8].includes("+")) { // dep on next day
+                    if (depHour < 5) {
+                        flightShip2.flightData[elementNo2] = newData[i];
+                        elementNo2++;
+                    }
+                } else { // dep on today
+                    if (depHour >= 15) {
+                        flightShip2.flightData[elementNo2] = newData[i];
+                        elementNo2++;
+                    }
+                }
+            } else { // has arrHour
+                if (newData[i][7].includes("+")) { //arr on next day
+                    if (arrHour < 5) {
+                        flightShip2.flightData[elementNo2] = newData[i];
+                        elementNo2++;
+                    }
+                } else { //arr on today
+                    if (arrHour >= 15) { //arr on 15 - 24h
+                        flightShip2.flightData[elementNo2] = newData[i];
+                        elementNo2++;
+                    } else { //arr out 15 - 24h
+                        if (newData[i][8].includes("+")) { // dep on next day
+                            if (depHour < 5) {
+                                flightShip2.flightData[elementNo2] = newData[i];
+                                elementNo2++;
+                            }
+                        } else { // dep on today
+                            if (depHour >= 15) {
+                                flightShip2.flightData[elementNo2] = newData[i];
+                                elementNo2++;
+                            }
+                        }
+                    }
+                }
             }
         }
         let splitShip = {
@@ -162,7 +209,7 @@ function FlightPlan() {
                             {data.map((individualData, index) => (
                                 <tr key={index} >
                                     {data[index].map((key) => (
-                                        <th key={key}>{key}</th>
+                                        <td key={key}>{key}</td>
                                     ))
                                     }
                                 </tr>

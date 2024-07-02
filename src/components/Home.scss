@@ -21,31 +21,54 @@
             background-color: rgb(210, 208, 208);
         }
     }
+
+    .react-datepicker__input-container input {
+        display: block;
+        width: 90% !important;
+    }
 }
 
-.react-datepicker__input-container input {
-    display: block;
-    width: 90% !important;
-}
+.plan-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-input {
-    // font-size: 16px;
-    background-color: transparent;
-    border: none;
-    width: 100%;
-    // padding: 12px 12px;
-    // font-family: 'Poppins', sans-serif;
-}
+    button {
+        margin-left: 10px;
 
-input:hover {
-    background-color: #fffaf3;
-}
+        &:hover {
+            background-color: rgb(210, 208, 208);
+        }
+    }
 
-input:focus {
-    outline: 1px solid #ccc;
-    border: 1px solid #ccc;
-}
+    tr td {
+        padding: 1px;
+        border: 1px solid black;
+    }
 
-tr td {
-    padding: 2px;
+    tr th {
+        text-align: center;
+        border: 1px solid black;
+    }
+
+    table {
+        float: left;
+        margin-left: 10px;
+    }
+
+    input {
+        text-transform: uppercase;
+        background-color: transparent;
+        border: none;
+        width: 100%;
+    }
+
+    input:hover {
+        background-color: #fffaf3;
+    }
+
+    input:focus {
+        outline: 1px solid #ccc;
+        border: 1px solid #ccc;
+    }
 }
