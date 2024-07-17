@@ -5,9 +5,11 @@ import Register from '../components/Register';
 import UserList from '../components/Users';
 import LoginPage from "../components/LoginPage";
 import ChangePass from "../components/ChangePass";
+import Resource from "../components/Resource";
 import { useNavigate } from 'react-router-dom';
 import React, { useContext, useEffect } from 'react';
 import { UserContext } from "../context/UserContext";
+import PointCode from "../components/PointCode";
 
 const AppRoutes = (props) => {
     const navigate = useNavigate();
@@ -27,6 +29,8 @@ const AppRoutes = (props) => {
                 <Route path="/register" element={<Register />} />
                 <Route path="/users" element={<UserList />} />
                 <Route path="/changePass" element={<ChangePass />} />
+                <Route path="/resource" element={<Resource />} />
+                <Route path="/pointCode" element={<PointCode />} />
             </Routes>
         </>
     )

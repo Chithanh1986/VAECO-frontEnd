@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { updateUser } from '../services/UserService';
 import { UserContext } from '../context/UserContext';
 
-const ModalUpdate = (props) => {
+const ModalUpdateForLeader = (props) => {
     const defaultUserData = {
         vae_user: '',
         vae_id: '',
@@ -67,17 +67,8 @@ const ModalUpdate = (props) => {
                 <Modal.Body>
                     <div className='content-body'>
                         <div className=' form-group'>
-                            <label>Vaeco user :</label>
-                            <input className='form-control' value={userData.vae_user}
-                                onChange={(event) => handleOnchangeInput(event.target.value, "vae_user")}
-                            />
-                        </div>
+                            <label>Vaeco user: {userData.vae_user}, Vaeco ID: {userData.vae_id}</label>
 
-                        <div className=' form-group'>
-                            <label>Vaeco Id :</label>
-                            <input className='form-control' value={userData.vae_id}
-                                onChange={(event) => handleOnchangeInput(event.target.value, "vae_id")}
-                            />
                         </div>
 
                         <div className='form-group'>
@@ -128,19 +119,6 @@ const ModalUpdate = (props) => {
                         </div>
 
                         <div className=' form-group'>
-                            <label>Group :</label>
-                            <select
-                                className='form-select'
-                                onChange={(event) => handleOnchangeInput(event.target.value, "group")}
-                                value={userData.group}
-                            >
-                                <option value="user">user</option>
-                                <option value="leader">leader</option>
-                                <option value="admin">admin</option>
-                            </select>
-                        </div>
-
-                        <div className=' form-group'>
                             <label>Remark :</label>
                             <input className='form-control' value={userData.remark}
                                 onChange={(event) => handleOnchangeInput(event.target.value, "remark")}
@@ -162,4 +140,4 @@ const ModalUpdate = (props) => {
     )
 }
 
-export default ModalUpdate;
+export default ModalUpdateForLeader;

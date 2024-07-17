@@ -1,0 +1,27 @@
+.pointCode-container {
+
+    .user-header {
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    .pointCode-body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        tr th {
+            text-align: center;
+        }
+
+    }
+
+    .user-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

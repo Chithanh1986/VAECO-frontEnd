@@ -26,6 +26,10 @@
         display: block;
         width: 90% !important;
     }
+
+    label {
+        margin-left: 5px;
+    }
 }
 
 .plan-container {
@@ -57,7 +61,6 @@
     }
 
     input {
-        text-transform: uppercase;
         background-color: transparent;
         border: none;
         width: 100%;
@@ -71,4 +74,18 @@
         outline: 1px solid #ccc;
         border: 1px solid #ccc;
     }
+
+    h3 {
+        text-align: center;
+    }
+
+    .subPlan-container {
+        .power-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
 }

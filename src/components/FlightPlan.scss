@@ -45,6 +45,18 @@
     padding-top: 5px;
 }
 
+.plan-container {
+    display: flex;
+    flex-direction: row;
+
+}
+
+.planBody-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 table {
-    height: 20px;
+    margin-top: 10px;
 }

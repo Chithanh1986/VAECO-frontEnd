@@ -4,11 +4,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
-import { loadPlanApi } from '../services/UserService';
+import { loadPlanApi, savePlanApi, loadTeamData } from '../services/UserService';
 
 const Home = () => {
     const [date, setDate] = useState(null);
     const [ship, setShip] = useState("MO");
+    const [station, setStation] = useState("DAD");
     const [flightPlan, setFlightPlan] = useState(null);
     const [WOPlan, setWOPlan] = useState(null);
     const [rev, setRev] = useState(null);
@@ -17,6 +18,10 @@ const Home = () => {
     const [driver, setDriver] = useState(null);
     const [BDuty, setBDuty] = useState(null);
     const [powerSource, setPowerSource] = useState(null);
+    const [serverDate, setServerDate] = useState();
+    const [serverShip, setServerShip] = useState();
+    const [serverStation, setServerStation] = useState();
+    const [team, setTeam] = useState();
 
     const handleClear = () => {
         setDate(null);
@@ -26,8 +31,11 @@ const Home = () => {
 
     const handleLoad = async () => {
         if (date) {
-            let serverData = await loadPlanApi(new Date(date).toLocaleDateString('fr-FR'), ship);
+            let serverData = await loadPlanApi(new Date(date).toLocaleDateString('fr-FR'), ship, station);
             if (+serverData.EC === 0) {
+                setServerDate(serverData.DT.datePlan);
+                setServerShip(serverData.DT.ship);
+                setServerStation(serverData.DT.station);
                 setRev(serverData.DT.rev);
                 setShipLeader(serverData.DT.shipLeader);
                 setHandovership(serverData.DT.handoverShip);
@@ -45,14 +53,36 @@ const Home = () => {
         }
     }
 
-    const handleSave = () => {
-        console.log(flightPlan)
+    const handleSave = async () => {
+        if (flightPlan) {
+            let reqData = {
+                date: serverDate,
+                ship: serverShip,
+                station: serverStation,
+                planData: flightPlan,
+                WOData: WOPlan,
+                powerSource: powerSource,
+                BDuty: BDuty,
+                driver: driver,
+                handoverShip: handoverShip,
+                shipLeader: shipLeader,
+                rev: new Date().toLocaleDateString('fr-FR') + " Time " + new Date().toLocaleTimeString('fr-FR')
+            };
+            let resData = await savePlanApi(reqData);
+            if (resData.EC === 0) {
+                toast.success(resData.EM)
+            } else {
+                toast.error(resData.EM)
+            }
+        } else {
+            toast.error('Do not have flight plan')
+        }
     }
 
     const onChangeInput = (e, STT) => {
         const { name, value } = e.target
         const editData = flightPlan.map((item) =>
-            item.STT === STT && name ? { ...item, [name]: value } : item
+            item.STT === STT && name ? { ...item, [name]: value.toUpperCase() } : item
         )
         setFlightPlan(editData)
     }
@@ -60,7 +90,7 @@ const Home = () => {
     const onChangeInputWO = (e, STT) => {
         const { name, value } = e.target
         const editWO = WOPlan.map((item) =>
-            item.STT === STT && name ? { ...item, [name]: value } : item
+            item.STT === STT && name ? { ...item, [name]: value.toUpperCase() } : item
         )
         setWOPlan(editWO)
     }
@@ -68,7 +98,7 @@ const Home = () => {
     const onChangeInputBDuty = (e, STT) => {
         const { name, value } = e.target
         const editBDuty = BDuty.map((item) =>
-            item.STT === STT && name ? { ...item, [name]: value } : item
+            item.STT === STT && name ? { ...item, [name]: value.toUpperCase() } : item
         )
         setBDuty(editBDuty)
     }
@@ -76,7 +106,7 @@ const Home = () => {
     const onChangeInputPower = (e, STT) => {
         const { name, value } = e.target
         const editPower = powerSource.map((item) =>
-            item.STT === STT && name ? { ...item, [name]: value } : item
+            item.STT === STT && name ? { ...item, [name]: value.toUpperCase() } : item
         )
         setPowerSource(editPower)
     }
@@ -128,11 +158,144 @@ const Home = () => {
         setTimeout(() => setPowerSource(deleteRow), 1);
     };
 
+    const calculateFlightPoint = (AL, ACType, ETA, ETD, remark) => {
+        
+        // let CRS = 0;
+        // let MECH = 0;
+        // if (AL === "VN") {
+        //     CRS = 40;
+        //     MECH = 20;
+        //     return { CRS, MECH };
+        // } else {
+        //     CRS = 50;
+        //     MECH = 30;
+        //     return { CRS, MECH };
+        // }
+        // switch (AL) {
+        //     case "JX":
+
+        //         break;
+
+        //     default:
+        //         break;
+        // }
+    };
+
+    const calculateWOPoint = () => {
+
+    };
+
+    const updateInput = () => {
+        let updateData = powerSource;
+        updateData.map((individual, index) => {
+            individual.work = 0;
+            individual.point = 0;
+
+            flightPlan.find((obj, i) => {
+                if (obj.CRS1 === individual.name && obj.CRS1 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                    if (obj.MECH1 === "" && obj.MECH2 === "") {
+                        individual.point = point.CRS + point.MECH;
+                    } else {
+                        individual.point = point.CRS;
+                    }
+                }
+                if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                    if (obj.MECH2 === "") {
+                        individual.point = point.MECH;
+                    } else {
+                        individual.point = point.MECH / 2;
+                    }
+                }
+                if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                }
+                if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                    if (obj.MECH1 === "") {
+                        individual.point = point.MECH;
+                    } else {
+                        individual.point = point.MECH / 2;
+                    }
+                }
+            })
+
+            WOPlan.find((obj, i) => {
+                if (obj.CRS === individual.name && obj.CRS !== "") {
+                    individual.work++;
+                    let point = calculateWOPoint();
+                    if (obj.MECH1 === "" && obj.MECH2 === "") {
+                        individual.point = point.CRS + point.MECH;
+                    } else {
+                        individual.point = point.CRS;
+                    }
+                }
+                if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                    if (obj.MECH2 === "") {
+                        individual.point = point.MECH;
+                    } else {
+                        individual.point = point.MECH / 2;
+                    }
+                }
+                if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                }
+                if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
+                    if (obj.MECH1 === "") {
+                        individual.point = point.MECH;
+                    } else {
+                        individual.point = point.MECH / 2;
+                    }
+                }
+            })
+
+            updateData[index].work = individual.work;
+        })
+        setPowerSource(null);
+        setTimeout(() => setPowerSource(updateData), 1);
+    };
+
+    const handleLoadTeam = async (team, serverStation) => {
+        let data = await loadTeamData(team, serverStation);
+        let dataToPowerSource = powerSource.slice(0, data.DT.length);
+        data.DT.map((individual, index) => {
+            dataToPowerSource[index].STT = index + 1;
+            dataToPowerSource[index].ID = individual.vae_id;
+            dataToPowerSource[index].name = individual.name.toUpperCase();
+            dataToPowerSource[index].work = 0;
+            dataToPowerSource[index].point = 0;
+            dataToPowerSource[index].hours = "";
+            dataToPowerSource[index].type = "";
+            dataToPowerSource[index].fromTo = ""
+        });
+        setPowerSource(dataToPowerSource);
+        updateInput();
+    }
+
     return (
         <div>
             <div className='container'>
                 <div className='flight-container'>
-                    <label > Choose date  :</label>
+                    <label>Choose station :</label>
+                    <select
+                        className='form-select'
+                        style={{ width: '10%' }}
+                        onChange={(event) => setStation(event.target.value)}
+                    >
+                        <option selected value="DAD">DAD</option>
+                        <option value="CXR">CXR</option>
+                    </select>
+                    <label >   Choose date :</label>
                     <DatePicker
                         selected={date}
                         onChange={date => setDate(date)}
@@ -143,7 +306,7 @@ const Home = () => {
                     <label > Choose ship  :</label>
                     <select
                         className='form-select'
-                        style={{ width: '20%' }}
+                        style={{ width: '10%' }}
                         onChange={(event) => setShip(event.target.value)}
                     >
                         <option selected value="MO">Morning</option>
@@ -163,8 +326,8 @@ const Home = () => {
             </div>
             <div className='plan-container'>
                 {(flightPlan && WOPlan && powerSource) && (
-                    <div >
-                        <h3>Rev: {rev}</h3>
+                    <div className='subPlan-container'>
+                        <h3>Station: {serverStation}, Date: {serverDate}, Rev: {rev}</h3>
                         <table className='table-striped table-bordered' responsive>
                             <thead>
                                 <tr>
@@ -245,6 +408,7 @@ const Home = () => {
                                                 value={CRS1}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: CRS1 === "" ? 5 + 'ch' : CRS1.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -254,6 +418,7 @@ const Home = () => {
                                                 value={MECH1}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: MECH1 === "" ? 5 + 'ch' : MECH1.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -263,6 +428,7 @@ const Home = () => {
                                                 value={CRS2}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: CRS2 === "" ? 5 + 'ch' : CRS2.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -272,6 +438,7 @@ const Home = () => {
                                                 value={MECH2}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: MECH2 === "" ? 5 + 'ch' : MECH2.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -340,6 +507,7 @@ const Home = () => {
                                                 value={CRS}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: CRS === "" ? 5 + 'ch' : CRS.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -349,6 +517,7 @@ const Home = () => {
                                                 value={MECH1}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: MECH1 === "" ? 5 + 'ch' : MECH1.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -358,6 +527,7 @@ const Home = () => {
                                                 value={MECH2}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: MECH2 === "" ? 5 + 'ch' : MECH2.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -367,6 +537,7 @@ const Home = () => {
                                                 value={MECH3}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: MECH3 === "" ? 5 + 'ch' : MECH3.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -386,18 +557,18 @@ const Home = () => {
                             <tbody>
                                 <tr>
                                     <th rowSpan="2" colSpan="2">Ship leader</th>
-                                    <td colSpan="4">
+                                    <td colSpan="3">
                                         <input
                                             name="leader"
                                             value={shipLeader[0].leader}
                                             type="text"
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
-                                                leaderData[0].leader = e.target.value;
+                                                leaderData[0].leader = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
 
                                             }}
-                                            style={{ width: shipLeader[0].leader === "" ? 5 + 'ch' : shipLeader[0].leader.length + 1 + 'ch' }}
+                                            style={{ width: shipLeader[0].leader === "" ? 5 + 'ch' : shipLeader[0].leader.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
@@ -413,16 +584,29 @@ const Home = () => {
                                             style={{ width: shipLeader[0].hours === "" ? 5 + 'ch' : shipLeader[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
+                                    <td>
+                                        <input
+                                            name="fromTo"
+                                            value={shipLeader[0].fromTo}
+                                            type="text"
+                                            onChange={(e) => {
+                                                let leaderData = [...shipLeader];
+                                                leaderData[0].fromTo = e.target.value;
+                                                setShipLeader(leaderData);
+                                            }}
+                                            style={{ width: shipLeader[0].fromTo === "" ? 5 + 'ch' : shipLeader[0].fromTo.length + 2 + 'ch' }}
+                                        />
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td colSpan="4">
+                                    <td colSpan="3">
                                         <input
                                             name="leader"
                                             value={shipLeader[1].leader}
                                             type="text"
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
-                                                leaderData[1].leader = e.target.value;
+                                                leaderData[1].leader = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
 
                                             }}
@@ -442,6 +626,19 @@ const Home = () => {
                                             style={{ width: shipLeader[1].hours === "" ? 5 + 'ch' : shipLeader[1].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
+                                    <td>
+                                        <input
+                                            name="fromTo"
+                                            value={shipLeader[1].fromTo}
+                                            type="text"
+                                            onChange={(e) => {
+                                                let leaderData = [...shipLeader];
+                                                leaderData[1].fromTo = e.target.value;
+                                                setShipLeader(leaderData);
+                                            }}
+                                            style={{ width: shipLeader[1].fromTo === "" ? 5 + 'ch' : shipLeader[1].fromTo.length + 2 + 'ch' }}
+                                        />
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th colSpan="2">Start Ship</th>
@@ -452,7 +649,7 @@ const Home = () => {
                                             type="text"
                                             onChange={(e) => {
                                                 let handoverData = [...handoverShip];
-                                                handoverData[0] = e.target.value;
+                                                handoverData[0] = e.target.value.toUpperCase();
                                                 setHandovership(handoverData);
                                             }}
                                             style={{ width: handoverShip[0] === "" ? 5 + 'ch' : handoverShip[0].length + 2 + 'ch' }}
@@ -468,7 +665,7 @@ const Home = () => {
                                             type="text"
                                             onChange={(e) => {
                                                 let handoverData = [...handoverShip];
-                                                handoverData[1] = e.target.value;
+                                                handoverData[1] = e.target.value.toUpperCase();
                                                 setHandovership(handoverData);
                                             }}
                                             style={{ width: handoverShip[1] === "" ? 5 + 'ch' : handoverShip[1].length + 2 + 'ch' }}
@@ -484,7 +681,7 @@ const Home = () => {
                                             type="text"
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[0].driver = e.target.value;
+                                                driverData[0].driver = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
                                             style={{ width: driver[0].driver === "" ? 5 + 'ch' : driver[0].driver.length + 2 + 'ch' }}
@@ -506,14 +703,14 @@ const Home = () => {
                                     <td>
                                         <input
                                             name="driver1Time"
-                                            value={driver[0].time}
+                                            value={driver[0].fromTo}
                                             type="text"
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[0].time = e.target.value;
+                                                driverData[0].fromTo = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[0].time === "" ? 5 + 'ch' : driver[0].time.length + 2 + 'ch' }}
+                                            style={{ width: driver[0].fromTo === "" ? 5 + 'ch' : driver[0].fromTo.length + 2 + 'ch' }}
                                         />
                                     </td>
                                 </tr>
@@ -525,7 +722,7 @@ const Home = () => {
                                             type="text"
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[1].driver = e.target.value;
+                                                driverData[1].driver = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
                                             style={{ width: driver[1].driver === "" ? 5 + 'ch' : driver[1].driver.length + 2 + 'ch' }}
@@ -548,14 +745,14 @@ const Home = () => {
                                     <td>
                                         <input
                                             name="driver2Time"
-                                            value={driver[1].time}
+                                            value={driver[1].fromTo}
                                             type="text"
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[1].time = e.target.value;
+                                                driverData[1].fromTo = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[1].time === "" ? 5 + 'ch' : driver[1].time.length + 2 + 'ch' }}
+                                            style={{ width: driver[1].fromTo === "" ? 5 + 'ch' : driver[1].fromTo.length + 2 + 'ch' }}
                                         />
                                     </td>
                                 </tr>
@@ -638,7 +835,6 @@ const Home = () => {
                                         <td>
                                             <select
                                                 className='form-select'
-                                                // style={{ width: '20%' }}
                                                 name="type"
                                                 onChange={(e) => onChangeInputPower(e, STT)}
                                             >
@@ -664,6 +860,27 @@ const Home = () => {
                                             onClick={() => handlePowerAddRow()}>Add row</button>
                                         <button className='btn btn-info'
                                             onClick={() => handlePowerDeleteRow()}>Delete row</button>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th colSpan="7">
+                                        <div className='power-container'>
+                                            <label>Select team:</label>
+                                            <select
+                                                className='form-select'
+                                                name="type"
+                                                style={{ width: '30%' }}
+                                                onChange={(event) => setTeam(event.target.value)}
+                                            >
+                                                <option selected value=""></option>
+                                                <option value="Team 1">Team 1</option>
+                                                <option value="Team 2">Team 2</option>
+                                                <option value="Team 3">Team 3</option>
+                                                <option value="Team 4">Team 4</option>
+                                            </select>
+                                            <button className='btn btn-info'
+                                                onClick={() => handleLoadTeam(team, serverStation)}>Load</button>
+                                        </div>
                                     </th>
                                 </tr>
                             </tbody>

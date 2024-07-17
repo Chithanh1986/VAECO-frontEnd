@@ -48,6 +48,7 @@ const Header = (props) => {
                                     <NavDropdown title="Admin" id="basic-nav-dropdown">
                                         <NavDropdown.Item href="/register">Register</NavDropdown.Item>
                                         <NavDropdown.Item href="/users">Manage users</NavDropdown.Item>
+                                        <NavDropdown.Item href="/pointCode">Point Code</NavDropdown.Item>
                                     </NavDropdown>
                                 </Nav>
                                 <Nav>

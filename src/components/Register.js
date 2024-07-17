@@ -8,8 +8,14 @@ function Register() {
     const navigate = useNavigate();
     const [vae_user, setVaeUser] = useState("");
     const [vae_id, setVaeId] = useState("");
+    const [surname, setSurname] = useState("");
+    const [name, setName] = useState("");
+    const [division, setDivision] = useState("Tech");
+    const [station, setStation] = useState("DAD")
     const password = "12345678";
     const [group, setGroup] = useState("user");
+    const [remark, setRemark] = useState();
+
 
     const isValidInputs = () => {
         if (!vae_user || !vae_id) {
@@ -22,7 +28,7 @@ function Register() {
     const handleRegister = async () => {
         let check = isValidInputs();
         if (check === true) {
-            let serverData = await registerApi(vae_user, vae_id, password, group);
+            let serverData = await registerApi(vae_user, vae_id, surname, name, division, station, password, group, remark);
             if (+serverData.EC === 0) {
                 toast.success(serverData.EM)
                 navigate('/users');
@@ -58,6 +64,47 @@ function Register() {
                     onKeyPress={(event) => handlePressEnter(event)}
                     onChange={(event) => setVaeId(event.target.value)} />
 
+                <div className='text'>Surname</div>
+                <input
+                    type='text'
+                    value={surname}
+                    onChange={(event) => setSurname(event.target.value)} />
+
+                <div className='text'>Name</div>
+                <input
+                    type='text'
+                    value={name}
+                    onChange={(event) => setName(event.target.value)} />
+
+                <div className='text'>Division</div>
+                <select
+                    className='form-select'
+                    onChange={(event) => setDivision(event.target.value)}
+                    onKeyPress={(event) => handlePressEnter(event)}
+                >
+                    <option value="Admin">Admin division</option>
+                    <option selected value="Tech">Tech division</option>
+                    <option value="Team 1">Team 1</option>
+                    <option value="Team 2">Team 2</option>
+                    <option value="Team 3">Team 3</option>
+                    <option value="Team 4">Team 4</option>
+                </select>
+
+                <div className='text'>Station</div>
+                <select
+                    className='form-select'
+                    onChange={(event) => setStation(event.target.value)}
+                    onKeyPress={(event) => handlePressEnter(event)}
+                >
+                    <option selected value="DAD">DAD</option>
+                    <option value="CXR">CXR</option>
+                    <option value="HUI">HUI</option>
+                    <option value="VDH">VDH</option>
+                    <option value="UIH">UIH</option>
+                    <option value="TBB">TBB</option>
+                    <option value="VCL">VCL</option>
+                </select>
+
                 <div className='text'>Group</div>
                 <select
                     className='form-select'
@@ -68,6 +115,12 @@ function Register() {
                     <option value="leader">leader</option>
                     <option value="admin">admin</option>
                 </select>
+
+                <div className='text'>Remark</div>
+                <input
+                    type='text'
+                    value={remark}
+                    onChange={(event) => setRemark(event.target.value)} />
 
                 <div className='text'>Default password: 12345678</div>
 

@@ -10,7 +10,7 @@ import ModalResetPass from './ModalResetPass';
 const UserList = (props) => {
     const [listUsers, setListUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [currentLimit, setCurrentLimit] = useState(5);
+    const [currentLimit, setCurrentLimit] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
     const [isShowModalDelete, setIsShowModalDelete] = useState(false);
     const [dataModal, setDataModal] = useState({});
@@ -112,9 +112,9 @@ const UserList = (props) => {
 
     return (
         <>
-            <div className='container'>
+            <div>
                 <div className='manage-users-container'>
-                    <div className='user-header'>
+                    <div className='user-header container'>
                         <div className='search-container' >
                             <input
                                 type='text'
@@ -140,7 +140,12 @@ const UserList = (props) => {
                                     <th scope="col">ID</th>
                                     <th scope="col">Vaeco name</th>
                                     <th scope="col">Vaeco ID</th>
+                                    <th scope="col">Surname</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Division</th>
+                                    <th scope="col">Station</th>
                                     <th scope="col">Group</th>
+                                    <th scope="col">Remark</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -154,7 +159,12 @@ const UserList = (props) => {
                                                     <td>{item.id}</td>
                                                     <td>{item.vae_user}</td>
                                                     <td>{item.vae_id}</td>
+                                                    <td>{item.surname}</td>
+                                                    <td>{item.name}</td>
+                                                    <td>{item.division}</td>
+                                                    <td>{item.station}</td>
                                                     <td>{item.group}</td>
+                                                    <td>{item.remark}</td>
                                                     <td>
                                                         <button className='btn btn-warning'
                                                             onClick={() => handleResetPassword(item)}
