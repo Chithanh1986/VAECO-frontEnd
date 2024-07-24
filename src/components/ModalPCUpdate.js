@@ -11,6 +11,7 @@ const ModalPCUpdate = (props) => {
         code: '',
         ACType: '',
         type: 'transit',
+        maxTime: '',
         remark: '',
         CRSWHour: '',
         MECHWHour: '',
@@ -99,6 +100,13 @@ const ModalPCUpdate = (props) => {
                                 <option value="PRE">PRE</option>
                                 <option value="WO">WO</option>
                             </select>
+                        </div>
+
+                        <div className=' form-group'>
+                            <label>Max service time (min) :</label>
+                            <input className='form-control' value={pointCode.maxTime}
+                                onChange={(event) => handleOnchangeInput(event.target.value.toUpperCase(), "maxTime")}
+                            />
                         </div>
 
                         <div className='form-group'>

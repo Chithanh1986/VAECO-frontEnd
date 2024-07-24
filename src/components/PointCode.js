@@ -21,7 +21,7 @@ const PointCode = (props) => {
 
     useEffect(() => {
         fetchPointCode();
-    }, [])
+    }, [currentPage])
 
     const fetchPointCode = async () => {
         let response = await loadPointCode(currentPage, currentLimit);
@@ -110,7 +110,7 @@ const PointCode = (props) => {
                                 placeholder='Search by code or AC type or type'
                                 value={searchValue}
                                 style={{ width: '30%' }}
-                                onChange={(event) => setSearchValue(event.target.value)} />
+                                onChange={(event) => setSearchValue(event.target.value.toUpperCase())} />
                             <button
                                 className='btn btn-info mx-1'
                                 onClick={() => handleSearch(searchValue)}
@@ -128,9 +128,10 @@ const PointCode = (props) => {
                                 <tr>
                                     <th scope="col">No</th>
                                     <th scope="col">Airline</th>
-                                    <th scope="col">AC type</th>
                                     <th scope="col">Code</th>
+                                    <th scope="col">AC type</th>
                                     <th scope="col">Type</th>
+                                    <th scope="col">Max time (min)</th>
                                     <th scope="col">Remark</th>
                                     <th scope="col">CRS W.H</th>
                                     <th scope="col">MECH W.H</th>
@@ -147,9 +148,10 @@ const PointCode = (props) => {
                                                 <tr key={`row-${index}`}>
                                                     <td>{(currentPage - 1) * currentLimit + index + 1}</td>
                                                     <td>{item.airline}</td>
-                                                    <td>{item.ACType}</td>
                                                     <td>{item.code}</td>
+                                                    <td>{item.ACType}</td>
                                                     <td>{item.type}</td>
+                                                    <td>{item.maxTime}</td>
                                                     <td>{item.remark}</td>
                                                     <td>{item.CRSWHour}</td>
                                                     <td>{item.MECHWHour}</td>
@@ -171,7 +173,7 @@ const PointCode = (props) => {
                                     <><tr><td>Not found users</td></tr></>
                                 }
                                 <tr>
-                                    <th colSpan="11">
+                                    <th colSpan="12">
                                         <button className='btn btn-info'
                                             onClick={() => handleCreatePointCode()}
                                         >Create point code</button>

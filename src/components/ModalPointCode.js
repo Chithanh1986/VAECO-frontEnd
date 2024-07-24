@@ -12,6 +12,7 @@ const ModalPointCode = (props) => {
         code: '',
         ACType: '',
         type: 'TRANSIT',
+        maxTime: '',
         remark: '',
         CRSWHour: '',
         MECHWHour: '',
@@ -37,6 +38,7 @@ const ModalPointCode = (props) => {
     const handleConfirmCreate = async () => {
         let check = isValidInputs();
         if (check === true) {
+
             let res = await createPointCode(pointCode);
             if (res && res.EC === 0) {
                 toast.success(res.EM)
@@ -95,8 +97,16 @@ const ModalPointCode = (props) => {
                                 <option value="TRANSIT">TRANSIT</option>
                                 <option value="TERM">TERM</option>
                                 <option value="PRE">PRE</option>
+                                <option value="TERM-PRE">TERM + PRE</option>
                                 <option value="WO">WO</option>
                             </select>
+                        </div>
+
+                        <div className=' form-group'>
+                            <label>Max service time (min) :</label>
+                            <input className='form-control' value={pointCode.maxTime}
+                                onChange={(event) => handleOnchangeInput(event.target.value.toUpperCase(), "maxTime")}
+                            />
                         </div>
 
                         <div className='form-group'>

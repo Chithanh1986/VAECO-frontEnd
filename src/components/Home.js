@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
-import { loadPlanApi, savePlanApi, loadTeamData } from '../services/UserService';
+import { loadPlanApi, savePlanApi, loadTeamData, loadAllPC } from '../services/UserService';
 
 const Home = () => {
     const [date, setDate] = useState(null);
@@ -22,6 +22,7 @@ const Home = () => {
     const [serverShip, setServerShip] = useState();
     const [serverStation, setServerStation] = useState();
     const [team, setTeam] = useState();
+    const [pointCode, setPointCode] = useState();
 
     const handleClear = () => {
         setDate(null);
@@ -32,7 +33,8 @@ const Home = () => {
     const handleLoad = async () => {
         if (date) {
             let serverData = await loadPlanApi(new Date(date).toLocaleDateString('fr-FR'), ship, station);
-            if (+serverData.EC === 0) {
+            let serverPointCode = await loadAllPC();
+            if (+serverData.EC === 0 && serverPointCode.EC === 0) {
                 setServerDate(serverData.DT.datePlan);
                 setServerShip(serverData.DT.ship);
                 setServerStation(serverData.DT.station);
@@ -44,6 +46,7 @@ const Home = () => {
                 setPowerSource(serverData.DT.powerSource);
                 setWOPlan(serverData.DT.WOData);
                 setFlightPlan(serverData.DT.planData);
+                setPointCode(serverPointCode.DT);
                 toast.success(serverData.EM)
             } else {
                 toast.error(serverData.EM)
@@ -158,27 +161,121 @@ const Home = () => {
         setTimeout(() => setPowerSource(deleteRow), 1);
     };
 
-    const calculateFlightPoint = (AL, ACType, ETA, ETD, remark) => {
-        
-        // let CRS = 0;
-        // let MECH = 0;
-        // if (AL === "VN") {
-        //     CRS = 40;
-        //     MECH = 20;
-        //     return { CRS, MECH };
-        // } else {
-        //     CRS = 50;
-        //     MECH = 30;
-        //     return { CRS, MECH };
-        // }
-        // switch (AL) {
-        //     case "JX":
+    const getLongTX = (ETA, ETD, maxTime) => {
+        let startTime = 0;
+        let endTime = 0;
+        if (station === "DAD") {
+            if (ship === "MO") {
+                startTime = 240;
+                endTime = 960;
+            } else {
+                startTime = 960;
+                endTime = 1680;
+            }
+        } else {
+            if (ship === "MO") {
+                startTime = 420;
+                endTime = 1140;
+            } else {
+                startTime = 1140;
+                endTime = 1860;
+            }
+        }
 
-        //         break;
+        if (ETA >= startTime && ETD <= endTime && ETD - ETA > maxTime) {
+            let longTXTime = ETD - ETA - maxTime;
+            if (longTXTime >= 60) {
+                return 0.5;
+            } else {
+                return longTXTime / 120;
+            }
+        } else {
+            return 0;
+        }
+    }
 
-        //     default:
-        //         break;
-        // }
+    const calculateFlightPoint = (AL, ACType, ETA, ETD, Remark) => {
+        let CRSWHour = 0;
+        let MECHWHour = 0;
+        let CRSWPoint = 0;
+        let MECHWPoint = 0;
+        let longTX = 0;
+        if (ETA.includes("+")) { //convert ETA to minute
+            ETA = ETA.split("+")[0];
+            ETA = ETA.split(":");
+            ETA = (+ETA[0] + 24) * 60 + (+ETA[1]);
+        } else {
+            ETA = ETA.split(":");
+            ETA = +ETA[0] * 60 + (+ETA[1]);
+        }
+
+        if (ETD.includes("+")) { //convert ETD to minute
+            ETD = ETD.split("+")[0];
+            ETD = ETD.split(":");
+            ETD = (+ETD[0] + 24) * 60 + (+ETD[1]);
+        } else {
+            ETD = ETD.split(":");
+            ETD = +ETD[0] * 60 + (+ETD[1]);
+        }
+
+        let searchAL = pointCode.filter((obj) => obj.code === AL);
+        if (searchAL.length > 0) {
+            let searchACType = searchAL.filter((obj) => ACType.includes(obj.ACType));
+            if (searchACType.length > 0) {
+                let searchRemark = {
+                    CRSWHour: 0,
+                    MECHWHour: 0,
+                    CRSWPoint: 0,
+                    MECHWPoint: 0,
+                };
+                if (Remark.includes("TERM") && Remark.includes("PRE")) { //chuyen term + pre
+                    if (ETD - ETA > 120) {
+                        let searchTerm = searchACType.find((obj) => obj.type === "TERM");
+                        let searchPre = searchACType.find((obj) => obj.type === "PRE");
+                        searchRemark.CRSWHour = (+searchPre.CRSWHour) + (+searchTerm.CRSWHour);
+                        searchRemark.MECHWHour = (+searchPre.MECHWHour) + (+searchTerm.MECHWHour);
+                        searchRemark.CRSWPoint = (+searchPre.CRSWPoint) + (+searchTerm.CRSWPoint);
+                        searchRemark.MECHWPoint = (+searchPre.MECHWPoint) + (+searchTerm.MECHWPoint);
+                    } else {
+                        searchRemark = searchACType.find((obj) => obj.type === "TERM-PRE");
+                    }
+                } else { //khong phai term + pre
+                    if (!Remark.includes("TERM") && !Remark.includes("PRE")) { // chuyen transit
+                        if (AL === "VN") {
+                            searchRemark = searchACType.find((obj) => obj.type === "TRANSIT");
+                        } else {
+
+                            if (Remark.includes("RELEASE")) {
+                                searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && obj.remark.includes("RELEASE"));
+                            } else {
+                                searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && !obj.remark.includes("RELEASE"));
+                            }
+                        }
+                        longTX = getLongTX(ETA, ETD, searchRemark.maxTime);
+                    }
+                    if (Remark.includes("TERM")) { //chuyen term
+                        searchRemark = searchACType.find((obj) => obj.type === "TERM");
+                    }
+                    if (Remark.includes("PRE")) { //chuyen pre
+                        searchRemark = searchACType.find((obj) => obj.type === "PRE");
+                    }
+                }
+                if (searchRemark !== undefined) {
+                    CRSWHour = parseFloat(searchRemark.CRSWHour, 10);
+                    MECHWHour = parseFloat(searchRemark.MECHWHour, 10);
+                    CRSWPoint = parseFloat(searchRemark.CRSWPoint, 10);
+                    MECHWPoint = parseFloat(searchRemark.MECHWPoint, 10);
+                } else {
+                    toast.error("Point code not found")
+                }
+
+            } else {
+                toast.error("ACType: " + ACType + " not found")
+            }
+        } else {
+            toast.error("A/L: " + AL + " not found")
+        }
+        return ({ CRSWHour, MECHWHour, CRSWPoint, MECHWPoint, longTX });
     };
 
     const calculateWOPoint = () => {
@@ -189,77 +286,103 @@ const Home = () => {
         let updateData = powerSource;
         updateData.map((individual, index) => {
             individual.work = 0;
-            individual.point = 0;
+            individual.WPoint = 0;
+            individual.WHour = 0;
 
             flightPlan.find((obj, i) => {
-                if (obj.CRS1 === individual.name && obj.CRS1 !== "") {
+                if (obj.CRS1.trim() === individual.name.trim() && obj.CRS1.trim() !== "") {
                     individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                    if (obj.MECH1 === "" && obj.MECH2 === "") {
-                        individual.point = point.CRS + point.MECH;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                    if (obj.CRS2.trim() !== "") {
+                        point.CRSWPoint = point.CRSWPoint / 2;
+                        point.CRSWHour = point.CRSWHour / 2;
+                    }
+                    if (obj.MECH1.trim() === "" && obj.MECH2.trim() === "") {
+                        individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
+                        individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
+
                     } else {
-                        individual.point = point.CRS;
+                        individual.WPoint = individual.WPoint + point.CRSWPoint;
+                        individual.WHour = individual.WHour + point.CRSWHour;
+                    }
+                    individual.WPoint = individual.WPoint + point.longTX;
+                }
+                if (obj.MECH1.trim() === individual.name.trim() && obj.MECH1.trim() !== "") {
+                    individual.work++;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                    if (obj.MECH2.trim() === "" && obj.CRS2.trim() === "") {
+                        individual.WPoint = individual.WPoint + point.MECHWPoint + point.longTX;
+                        individual.WHour = individual.WHour + point.MECHWHour;
+                    } else {
+                        individual.WPoint = individual.WPoint + point.MECHWPoint / 2 + point.longTX;
+                        individual.WHour = individual.WHour + point.MECHWHour / 2;
                     }
                 }
-                if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
+                if (obj.CRS2.trim() === individual.name.trim() && obj.CRS2.trim() !== "") {
                     individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                    if (obj.MECH2 === "") {
-                        individual.point = point.MECH;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                    point.CRSWPoint = point.CRSWPoint / 2;
+                    point.MECHWPoint = point.MECHWPoint / 2;
+                    point.CRSWHour = point.CRSWHour / 2;
+                    point.MECHWHour = point.MECHWHour / 2;
+                    if (obj.MECH2.trim() !== "") {
+                        individual.WPoint = individual.WPoint + point.CRSWPoint;
+                        individual.WHour = individual.WHour + point.CRSWHour;
                     } else {
-                        individual.point = point.MECH / 2;
+                        individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
+                        individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
                     }
                 }
-                if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
+                if (obj.MECH2.trim() === individual.name.trim() && obj.MECH2.trim() !== "") {
                     individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                }
-                if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                    if (obj.MECH1 === "") {
-                        individual.point = point.MECH;
+                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                    if (obj.MECH1.trim() === "") {
+                        individual.WPoint = individual.WPoint + point.MECHWPoint;
+                        individual.WHour = individual.WHour + point.MECHWHour;
                     } else {
-                        individual.point = point.MECH / 2;
+                        individual.WPoint = individual.WPoint + point.MECHWPoint / 2;
+                        individual.WHour = individual.WHour + point.MECHWHour / 2;
                     }
                 }
             })
 
-            WOPlan.find((obj, i) => {
-                if (obj.CRS === individual.name && obj.CRS !== "") {
-                    individual.work++;
-                    let point = calculateWOPoint();
-                    if (obj.MECH1 === "" && obj.MECH2 === "") {
-                        individual.point = point.CRS + point.MECH;
-                    } else {
-                        individual.point = point.CRS;
-                    }
-                }
-                if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                    if (obj.MECH2 === "") {
-                        individual.point = point.MECH;
-                    } else {
-                        individual.point = point.MECH / 2;
-                    }
-                }
-                if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                }
-                if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.remark);
-                    if (obj.MECH1 === "") {
-                        individual.point = point.MECH;
-                    } else {
-                        individual.point = point.MECH / 2;
-                    }
-                }
-            })
+            // WOPlan.find((obj, i) => {
+            //     if (obj.CRS === individual.name && obj.CRS !== "") {
+            //         individual.work++;
+            //         let point = calculateWOPoint();
+            //         if (obj.MECH1 === "" && obj.MECH2 === "") {
+            //             individual.point = point.CRS + point.MECH;
+            //         } else {
+            //             individual.point = point.CRS;
+            //         }
+            //     }
+            //     if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
+            //         individual.work++;
+            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+            //         if (obj.MECH2 === "") {
+            //             individual.point = point.MECH;
+            //         } else {
+            //             individual.point = point.MECH / 2;
+            //         }
+            //     }
+            //     if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
+            //         individual.work++;
+            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+            //     }
+            //     if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
+            //         individual.work++;
+            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+            //         if (obj.MECH1 === "") {
+            //             individual.point = point.MECH;
+            //         } else {
+            //             individual.point = point.MECH / 2;
+            //         }
+            //     }
+            // })
 
             updateData[index].work = individual.work;
+            updateData[index].WPoint = individual.WPoint.toFixed(2);
+            updateData[index].WHour = individual.WHour.toFixed(0);
         })
         setPowerSource(null);
         setTimeout(() => setPowerSource(updateData), 1);
@@ -796,12 +919,13 @@ const Home = () => {
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Work</th>
-                                    <th>Point</th>
+                                    <th>WPoint</th>
+                                    <th>WHour</th>
                                     <th>Hours</th>
                                     <th>Type</th>
                                     <th>From to</th>
                                 </tr>
-                                {powerSource.map(({ STT, ID, name, work, point, hours, type, fromTo }) => (
+                                {powerSource.map(({ STT, ID, name, work, WPoint, WHour, hours, type, fromTo }) => (
                                     <tr key={STT}>
                                         <td >
                                             <input
@@ -822,7 +946,8 @@ const Home = () => {
                                             />
                                         </td>
                                         <td >{work}</td>
-                                        <td >{point}</td>
+                                        <td >{WPoint}</td>
+                                        <td >{WHour}</td>
                                         <td >
                                             <input
                                                 name="hours"

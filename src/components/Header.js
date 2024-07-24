@@ -45,10 +45,10 @@ const Header = (props) => {
                                     <Nav.Link href="/home" >Flight service</Nav.Link>
                                     <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
                                     <Nav.Link href="/Resource">Resource</Nav.Link>
+                                    <Nav.Link href="/pointCode">Point Code</Nav.Link>
                                     <NavDropdown title="Admin" id="basic-nav-dropdown">
                                         <NavDropdown.Item href="/register">Register</NavDropdown.Item>
                                         <NavDropdown.Item href="/users">Manage users</NavDropdown.Item>
-                                        <NavDropdown.Item href="/pointCode">Point Code</NavDropdown.Item>
                                     </NavDropdown>
                                 </Nav>
                                 <Nav>
