@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import './Home.scss';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { loadPlanApi, savePlanApi, loadTeamData, loadAllPC } from '../services/UserService';
+import { UserContext } from '../context/UserContext';
 
 const Home = () => {
     const [date, setDate] = useState(null);
@@ -23,6 +24,7 @@ const Home = () => {
     const [serverStation, setServerStation] = useState();
     const [team, setTeam] = useState();
     const [pointCode, setPointCode] = useState();
+    const { user } = useContext(UserContext);
 
     const handleClear = () => {
         setDate(null);
@@ -228,38 +230,48 @@ const Home = () => {
                     CRSWPoint: 0,
                     MECHWPoint: 0,
                 };
-                if (Remark.includes("TERM") && Remark.includes("PRE")) { //chuyen term + pre
-                    if (ETD - ETA > 120) {
-                        let searchTerm = searchACType.find((obj) => obj.type === "TERM");
-                        let searchPre = searchACType.find((obj) => obj.type === "PRE");
-                        searchRemark.CRSWHour = (+searchPre.CRSWHour) + (+searchTerm.CRSWHour);
-                        searchRemark.MECHWHour = (+searchPre.MECHWHour) + (+searchTerm.MECHWHour);
-                        searchRemark.CRSWPoint = (+searchPre.CRSWPoint) + (+searchTerm.CRSWPoint);
-                        searchRemark.MECHWPoint = (+searchPre.MECHWPoint) + (+searchTerm.MECHWPoint);
-                    } else {
-                        searchRemark = searchACType.find((obj) => obj.type === "TERM-PRE");
+                if (Remark.includes("CCCT") || Remark.includes("CCDB")) { //chuyen co
+                    if (Remark.includes("CCCT")) {
+                        searchRemark = searchACType.find((obj) => obj.type === "CCCT");
                     }
-                } else { //khong phai term + pre
-                    if (!Remark.includes("TERM") && !Remark.includes("PRE")) { // chuyen transit
-                        if (AL === "VN") {
-                            searchRemark = searchACType.find((obj) => obj.type === "TRANSIT");
+                    if (Remark.includes("CCDB")) {
+                        searchRemark = searchACType.find((obj) => obj.type === "CCDB");
+                    }
+                } else { //khong phai chuyen co
+                    if (Remark.includes("TERM") && Remark.includes("PRE")) { //chuyen term + pre
+                        if (ETD - ETA > 120) {
+                            let searchTerm = searchACType.find((obj) => obj.type === "TERM");
+                            let searchPre = searchACType.find((obj) => obj.type === "PRE");
+                            searchRemark.CRSWHour = (+searchPre.CRSWHour) + (+searchTerm.CRSWHour);
+                            searchRemark.MECHWHour = (+searchPre.MECHWHour) + (+searchTerm.MECHWHour);
+                            searchRemark.CRSWPoint = (+searchPre.CRSWPoint) + (+searchTerm.CRSWPoint);
+                            searchRemark.MECHWPoint = (+searchPre.MECHWPoint) + (+searchTerm.MECHWPoint);
                         } else {
-
-                            if (Remark.includes("RELEASE")) {
-                                searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && obj.remark.includes("RELEASE"));
-                            } else {
-                                searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && !obj.remark.includes("RELEASE"));
-                            }
+                            searchRemark = searchACType.find((obj) => obj.type === "TERM-PRE");
                         }
-                        longTX = getLongTX(ETA, ETD, searchRemark.maxTime);
-                    }
-                    if (Remark.includes("TERM")) { //chuyen term
-                        searchRemark = searchACType.find((obj) => obj.type === "TERM");
-                    }
-                    if (Remark.includes("PRE")) { //chuyen pre
-                        searchRemark = searchACType.find((obj) => obj.type === "PRE");
+                    } else { //khong phai term + pre
+                        if (!Remark.includes("TERM") && !Remark.includes("PRE")) { // chuyen transit
+                            if (AL === "VN") {
+                                searchRemark = searchACType.find((obj) => obj.type === "TRANSIT");
+                            } else {
+
+                                if (Remark.includes("RELEASE")) {
+                                    searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && obj.remark.includes("RELEASE"));
+                                } else {
+                                    searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && !obj.remark.includes("RELEASE"));
+                                }
+                            }
+                            longTX = getLongTX(ETA, ETD, searchRemark.maxTime);
+                        }
+                        if (Remark.includes("TERM")) { //chuyen term
+                            searchRemark = searchACType.find((obj) => obj.type === "TERM");
+                        }
+                        if (Remark.includes("PRE")) { //chuyen pre
+                            searchRemark = searchACType.find((obj) => obj.type === "PRE");
+                        }
                     }
                 }
+
                 if (searchRemark !== undefined) {
                     CRSWHour = parseFloat(searchRemark.CRSWHour, 10);
                     MECHWHour = parseFloat(searchRemark.MECHWHour, 10);
@@ -278,112 +290,231 @@ const Home = () => {
         return ({ CRSWHour, MECHWHour, CRSWPoint, MECHWPoint, longTX });
     };
 
-    const calculateWOPoint = () => {
-
+    const calculateWOPoint = (code, WHour) => {
+        let CRSWHour = 0;
+        let MECHWHour = 0;
+        let CRSWPoint = 0;
+        let MECHWPoint = 0;
+        if (code.includes("NRC")) {
+            if (+WHour === NaN || +WHour === 0) {
+                toast.error("WHour invalid")
+            } else {
+                switch (code.trim()) {
+                    case "NRCB":
+                        CRSWPoint = +WHour / 60 * 2;
+                        MECHWPoint = +WHour / 60;
+                        CRSWHour = +WHour;
+                        MECHWHour = +WHour;
+                        break;
+                    case "NRCA":
+                        CRSWPoint = +WHour / 60 * 1.5;
+                        MECHWPoint = +WHour / 60;
+                        CRSWHour = +WHour;
+                        MECHWHour = +WHour;
+                        break;
+                    case "NRCM":
+                        CRSWPoint = 0;
+                        MECHWPoint = +WHour / 60;
+                        CRSWHour = 0;
+                        MECHWHour = +WHour;
+                        break;
+                    default:
+                        toast.error("WO code: " + code + " not found")
+                }
+            }
+        } else {
+            let searchWO = pointCode.filter((obj) => obj.type === "WO");
+            let searchCode = searchWO.find((obj) => obj.code === code.trim());
+            if (searchCode === undefined) {
+                toast.error("WO code :" + code + " not found")
+            } else {
+                CRSWHour = +searchCode.CRSWHour;
+                MECHWHour = +searchCode.MECHWHour;
+                CRSWPoint = +searchCode.CRSWPoint;
+                MECHWPoint = +searchCode.MECHWPoint;
+            }
+        }
+        return ({ CRSWHour, MECHWHour, CRSWPoint, MECHWPoint });
     };
 
     const updateInput = () => {
         let updateData = powerSource;
+        let pointLeaderError = 0;
+        let pointStartShipError = 0;
+        let pointDriverError = 0;
+        let pointBDutyError = 0;
         updateData.map((individual, index) => {
             individual.work = 0;
             individual.WPoint = 0;
             individual.WHour = 0;
 
-            flightPlan.find((obj, i) => {
-                if (obj.CRS1.trim() === individual.name.trim() && obj.CRS1.trim() !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-                    if (obj.CRS2.trim() !== "") {
-                        point.CRSWPoint = point.CRSWPoint / 2;
-                        point.CRSWHour = point.CRSWHour / 2;
-                    }
-                    if (obj.MECH1.trim() === "" && obj.MECH2.trim() === "") {
-                        individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
-                        individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
+            if (individual.name.trim() !== "") {
+                //search flight plan
+                flightPlan.find((obj, i) => {
+                    if (obj.CRS1.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                        if (obj.CRS2.trim() !== "") {
+                            point.CRSWPoint = point.CRSWPoint / 2;
+                            point.CRSWHour = point.CRSWHour / 2;
+                        }
+                        if (obj.MECH1.trim() === "" && obj.MECH2.trim() === "") {
+                            individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
+                            individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
 
-                    } else {
+                        } else {
+                            individual.WPoint = individual.WPoint + point.CRSWPoint;
+                            individual.WHour = individual.WHour + point.CRSWHour;
+                        }
+                        individual.WPoint = individual.WPoint + point.longTX;
+                    }
+                    if (obj.MECH1.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                        if (obj.MECH2.trim() === "" && obj.CRS2.trim() === "") {
+                            individual.WPoint = individual.WPoint + point.MECHWPoint + point.longTX;
+                            individual.WHour = individual.WHour + point.MECHWHour;
+                        } else {
+                            individual.WPoint = individual.WPoint + point.MECHWPoint / 2 + point.longTX;
+                            individual.WHour = individual.WHour + point.MECHWHour / 2;
+                        }
+                    }
+                    if (obj.CRS2.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                        point.CRSWPoint = point.CRSWPoint / 2;
+                        point.MECHWPoint = point.MECHWPoint / 2;
+                        point.CRSWHour = point.CRSWHour / 2;
+                        point.MECHWHour = point.MECHWHour / 2;
+                        if (obj.MECH2.trim() !== "") {
+                            individual.WPoint = individual.WPoint + point.CRSWPoint;
+                            individual.WHour = individual.WHour + point.CRSWHour;
+                        } else {
+                            individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
+                            individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
+                        }
+                    }
+                    if (obj.MECH2.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
+                        if (obj.MECH1.trim() === "") {
+                            individual.WPoint = individual.WPoint + point.MECHWPoint;
+                            individual.WHour = individual.WHour + point.MECHWHour;
+                        } else {
+                            individual.WPoint = individual.WPoint + point.MECHWPoint / 2;
+                            individual.WHour = individual.WHour + point.MECHWHour / 2;
+                        }
+                    }
+                })
+
+                //search WO plan
+                WOPlan.find((obj, i) => {
+                    if (obj.CRS.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateWOPoint(obj.code, obj.WHour);
                         individual.WPoint = individual.WPoint + point.CRSWPoint;
                         individual.WHour = individual.WHour + point.CRSWHour;
                     }
-                    individual.WPoint = individual.WPoint + point.longTX;
-                }
-                if (obj.MECH1.trim() === individual.name.trim() && obj.MECH1.trim() !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-                    if (obj.MECH2.trim() === "" && obj.CRS2.trim() === "") {
-                        individual.WPoint = individual.WPoint + point.MECHWPoint + point.longTX;
-                        individual.WHour = individual.WHour + point.MECHWHour;
-                    } else {
-                        individual.WPoint = individual.WPoint + point.MECHWPoint / 2 + point.longTX;
-                        individual.WHour = individual.WHour + point.MECHWHour / 2;
-                    }
-                }
-                if (obj.CRS2.trim() === individual.name.trim() && obj.CRS2.trim() !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-                    point.CRSWPoint = point.CRSWPoint / 2;
-                    point.MECHWPoint = point.MECHWPoint / 2;
-                    point.CRSWHour = point.CRSWHour / 2;
-                    point.MECHWHour = point.MECHWHour / 2;
-                    if (obj.MECH2.trim() !== "") {
-                        individual.WPoint = individual.WPoint + point.CRSWPoint;
-                        individual.WHour = individual.WHour + point.CRSWHour;
-                    } else {
-                        individual.WPoint = individual.WPoint + point.CRSWPoint + point.MECHWPoint;
-                        individual.WHour = individual.WHour + point.CRSWHour + point.MECHWHour;
-                    }
-                }
-                if (obj.MECH2.trim() === individual.name.trim() && obj.MECH2.trim() !== "") {
-                    individual.work++;
-                    let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-                    if (obj.MECH1.trim() === "") {
+                    if (obj.MECH1.trim() === individual.name.trim() || obj.MECH2.trim() === individual.name.trim() || obj.MECH3.trim() === individual.name.trim()) {
+                        individual.work++;
+                        let point = calculateWOPoint(obj.code, obj.WHour);
                         individual.WPoint = individual.WPoint + point.MECHWPoint;
                         individual.WHour = individual.WHour + point.MECHWHour;
-                    } else {
-                        individual.WPoint = individual.WPoint + point.MECHWPoint / 2;
-                        individual.WHour = individual.WHour + point.MECHWHour / 2;
+                    }
+                })
+
+                //search leader
+                let pointLeader = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "SL");
+                if (pointLeader === undefined) {
+                    pointLeaderError = 1;
+                } else {
+                    if (individual.name.trim() === shipLeader[0].leader.trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[0].hours);
+                        individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[0].hours);
+                    }
+                    if (individual.name.trim() === shipLeader[1].leader.trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[1].hours);
+                        individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[1].hours);
                     }
                 }
-            })
 
-            // WOPlan.find((obj, i) => {
-            //     if (obj.CRS === individual.name && obj.CRS !== "") {
-            //         individual.work++;
-            //         let point = calculateWOPoint();
-            //         if (obj.MECH1 === "" && obj.MECH2 === "") {
-            //             individual.point = point.CRS + point.MECH;
-            //         } else {
-            //             individual.point = point.CRS;
-            //         }
-            //     }
-            //     if (obj.MECH1 === individual.name && obj.MECH1 !== "") {
-            //         individual.work++;
-            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-            //         if (obj.MECH2 === "") {
-            //             individual.point = point.MECH;
-            //         } else {
-            //             individual.point = point.MECH / 2;
-            //         }
-            //     }
-            //     if (obj.CRS2 === individual.name && obj.CRS2 !== "") {
-            //         individual.work++;
-            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-            //     }
-            //     if (obj.MECH2 === individual.name && obj.MECH2 !== "") {
-            //         individual.work++;
-            //         let point = calculateFlightPoint(obj.AL, obj.ACType, obj.ETA, obj.ETD, obj.Remark);
-            //         if (obj.MECH1 === "") {
-            //             individual.point = point.MECH;
-            //         } else {
-            //             individual.point = point.MECH / 2;
-            //         }
-            //     }
-            // })
+                //search work assign
+                let pointWorkAssign = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "PCT");
+                if (pointWorkAssign !== undefined) {
+                    if (individual.name.trim() === handoverShip[0].trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointWorkAssign.CRSWPoint);
+                    }
+                }
+
+                //search WO evaluate
+                let pointWOEval = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "WOE");
+                if (pointWOEval !== undefined) {
+                    if (individual.name.trim() === handoverShip[1].trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointWOEval.CRSWPoint);
+                        individual.WHour = (+individual.WHour) + (+pointWOEval.CRSWHour);
+                    }
+                }
+
+                //search handover ship
+                let pointStartShip = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "HOS");
+                if (pointStartShip === undefined) {
+                    pointStartShipError = 1;
+                } else {
+                    if (individual.name.trim() === handoverShip[2].trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
+                        individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
+                    }
+                    if (individual.name.trim() === handoverShip[3].trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
+                        individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
+                    }
+                }
+
+                //search driver
+                let pointDriver = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "DRI");
+                if (pointDriver === undefined) {
+                    pointDriverError = 1;
+                } else {
+                    if (individual.name.trim() === driver[0].driver.trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[0].hours);
+                        individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[0].hours);
+                    }
+                    if (individual.name.trim() === driver[1].driver.trim()) {
+                        individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[1].hours);
+                        individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[1].hours);
+                    }
+                }
+
+                //search B duty
+                let pointBDuty = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "BDT");
+                if (pointBDuty === undefined) {
+                    pointBDutyError = 1;
+                } else {
+                    let totalHours = 0;
+                    BDuty.map((obj, index) => { totalHours = totalHours + (+obj.hours) });
+                    BDuty.map((obj, index) => {
+                        if (individual.name.trim() === obj.name.trim()) {
+                            if (totalHours >= 24) {
+                                individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / totalHours * (+obj.hours);
+                                individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / totalHours * (+obj.hours);
+                            }
+                            else {
+                                individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / 24 * (+obj.hours);
+                                individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / 24 * (+obj.hours);
+                            }
+                        }
+                    })
+                }
+            }
 
             updateData[index].work = individual.work;
             updateData[index].WPoint = individual.WPoint.toFixed(2);
             updateData[index].WHour = individual.WHour.toFixed(0);
         })
+        if (pointLeaderError === 1) { toast.error("Point code SL not found") };
+        if (pointStartShipError === 1) { toast.error("Point code HOS not found") };
+        if (pointDriverError === 1) { toast.error("Point code DRI not found") };
+        if (pointBDutyError === 1) { toast.error("Point code BDT not found") };
         setPowerSource(null);
         setTimeout(() => setPowerSource(updateData), 1);
     };
@@ -422,7 +553,7 @@ const Home = () => {
                     <DatePicker
                         selected={date}
                         onChange={date => setDate(date)}
-                        minDate={new Date().setDate(new Date().getDate() - 10)}
+                        minDate={user.account.group === "admin" ? "" : new Date().setDate(new Date().getDate() - 1)}//{new Date().setDate(new Date().getDate() - 10)}
                         maxDate={new Date().setDate(new Date().getDate() + 1)}
                         dateFormat="dd/MM/YYYY"
                     />
@@ -574,10 +705,11 @@ const Home = () => {
                                 </tr>
                                 <tr>
                                     <th>STT</th>
-                                    <th colSpan="2">ACReg</th>
+                                    <th>Code</th>
+                                    <th>ACReg</th>
                                     <th colSpan="2">W/O No</th>
                                     <th colSpan="5">Job description</th>
-                                    <th>Remark</th>
+                                    <th>WHour</th>
                                     <th>CRS</th>
                                     <th>MECH1</th>
                                     <th>MECH2</th>
@@ -585,10 +717,19 @@ const Home = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {WOPlan.map(({ STT, ACReg, WONo, Desc, Remark, CRS, MECH1, MECH2, MECH3 }) => (
+                                {WOPlan.map(({ STT, code, ACReg, WONo, Desc, WHour, CRS, MECH1, MECH2, MECH3 }) => (
                                     <tr key={STT}>
                                         <td>{STT}</td>
-                                        <td colSpan="2">
+                                        <td >
+                                            <input
+                                                name="code"
+                                                value={code}
+                                                type="text"
+                                                onChange={(e) => onChangeInputWO(e, STT)}
+                                                style={{ width: code === "" ? 5 + 'ch' : code.length + 2 + 'ch' }}
+                                            />
+                                        </td>
+                                        <td>
                                             <input
                                                 name="ACReg"
                                                 value={ACReg}
@@ -617,11 +758,11 @@ const Home = () => {
                                         </td>
                                         <td>
                                             <input
-                                                name="Remark"
-                                                value={Remark}
+                                                name="WHour"
+                                                value={WHour}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
-                                                style={{ width: Remark === "" ? 5 + 'ch' : Remark.length + 2 + 'ch' }}
+                                                style={{ width: WHour === "" ? 5 + 'ch' : WHour.length + 2 + 'ch' }}
                                             />
                                         </td>
                                         <td>
@@ -683,28 +824,31 @@ const Home = () => {
                                     <td colSpan="3">
                                         <input
                                             name="leader"
+                                            placeholder='Name'
                                             value={shipLeader[0].leader}
                                             type="text"
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
                                                 leaderData[0].leader = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
-
                                             }}
-                                            style={{ width: shipLeader[0].leader === "" ? 5 + 'ch' : shipLeader[0].leader.length + 2 + 'ch' }}
+                                            onBlur={() => { updateInput() }}
+                                            style={{ width: shipLeader[0].leader === "" ? "Name  ".length + 'ch' : shipLeader[0].leader.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
                                         <input
                                             name="hours"
                                             value={shipLeader[0].hours}
+                                            placeholder='Hours'
                                             type="text"
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
                                                 leaderData[0].hours = e.target.value;
                                                 setShipLeader(leaderData);
                                             }}
-                                            style={{ width: shipLeader[0].hours === "" ? 5 + 'ch' : shipLeader[0].hours.length + 2 + 'ch' }}
+                                            onBlur={() => { updateInput() }}
+                                            style={{ width: shipLeader[0].hours === "" ? "Hours ".lenght + 'ch' : shipLeader[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
@@ -712,12 +856,13 @@ const Home = () => {
                                             name="fromTo"
                                             value={shipLeader[0].fromTo}
                                             type="text"
+                                            placeholder='From to'
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
                                                 leaderData[0].fromTo = e.target.value;
                                                 setShipLeader(leaderData);
                                             }}
-                                            style={{ width: shipLeader[0].fromTo === "" ? 5 + 'ch' : shipLeader[0].fromTo.length + 2 + 'ch' }}
+                                            style={{ width: shipLeader[0].fromTo === "" ? "From to".length + 'ch' : shipLeader[0].fromTo.length + 2 + 'ch' }}
                                         />
                                     </td>
                                 </tr>
@@ -727,11 +872,11 @@ const Home = () => {
                                             name="leader"
                                             value={shipLeader[1].leader}
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
                                                 leaderData[1].leader = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
-
                                             }}
                                             style={{ width: shipLeader[1].leader === "" ? 5 + 'ch' : shipLeader[1].leader.length + 1 + 'ch' }}
                                         />
@@ -741,6 +886,7 @@ const Home = () => {
                                             name="hours"
                                             value={shipLeader[1].hours}
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
                                                 leaderData[1].hours = e.target.value;
@@ -764,12 +910,13 @@ const Home = () => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th colSpan="2">Start Ship</th>
+                                    <th colSpan="2">Work assign</th>
                                     <td colSpan="5">
                                         <input
-                                            name="startShip"
+                                            name="WorkAssign"
                                             value={handoverShip[0]}
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let handoverData = [...handoverShip];
                                                 handoverData[0] = e.target.value.toUpperCase();
@@ -780,12 +927,13 @@ const Home = () => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th colSpan="2">End ship</th>
+                                    <th colSpan="2">WO evaluation</th>
                                     <td colSpan="5">
                                         <input
-                                            name="endShip"
+                                            name="WOEval"
                                             value={handoverShip[1]}
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let handoverData = [...handoverShip];
                                                 handoverData[1] = e.target.value.toUpperCase();
@@ -796,31 +944,69 @@ const Home = () => {
                                     </td>
                                 </tr>
                                 <tr>
+                                    <th colSpan="2">Start Ship</th>
+                                    <td colSpan="5">
+                                        <input
+                                            name="startShip"
+                                            value={handoverShip[2]}
+                                            type="text"
+                                            onBlur={() => { updateInput() }}
+                                            onChange={(e) => {
+                                                let handoverData = [...handoverShip];
+                                                handoverData[2] = e.target.value.toUpperCase();
+                                                setHandovership(handoverData);
+                                            }}
+                                            style={{ width: handoverShip[2] === "" ? 5 + 'ch' : handoverShip[2].length + 2 + 'ch' }}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th colSpan="2">End ship</th>
+                                    <td colSpan="5">
+                                        <input
+                                            name="endShip"
+                                            value={handoverShip[3]}
+                                            type="text"
+                                            onBlur={() => { updateInput() }}
+                                            onChange={(e) => {
+                                                let handoverData = [...handoverShip];
+                                                handoverData[3] = e.target.value.toUpperCase();
+                                                setHandovership(handoverData);
+                                            }}
+                                            style={{ width: handoverShip[3] === "" ? 5 + 'ch' : handoverShip[3].length + 2 + 'ch' }}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th rowSpan="2" colSpan="2">Driver</th>
                                     <td colSpan="3">
                                         <input
                                             name="driver1"
                                             value={driver[0].driver}
+                                            placeholder='Name'
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[0].driver = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[0].driver === "" ? 5 + 'ch' : driver[0].driver.length + 2 + 'ch' }}
+                                            style={{ width: driver[0].driver === "" ? "Name  ".length + 'ch' : driver[0].driver.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
                                         <input
                                             name="driver1Hours"
                                             value={driver[0].hours}
+                                            placeholder='Hours'
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[0].hours = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[0].hours === "" ? 5 + 'ch' : driver[0].hours.length + 2 + 'ch' }}
+                                            style={{ width: driver[0].hours === "" ? "Hours ".length + 'ch' : driver[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
@@ -828,12 +1014,13 @@ const Home = () => {
                                             name="driver1Time"
                                             value={driver[0].fromTo}
                                             type="text"
+                                            placeholder='From to'
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[0].fromTo = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[0].fromTo === "" ? 5 + 'ch' : driver[0].fromTo.length + 2 + 'ch' }}
+                                            style={{ width: driver[0].fromTo === "" ? "From to".length + 'ch' : driver[0].fromTo.length + 2 + 'ch' }}
                                         />
                                     </td>
                                 </tr>
@@ -857,6 +1044,7 @@ const Home = () => {
                                             value={driver[1].hours}
                                             type="text"
                                             placeholder='Stanby'
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[1].hours = e.target.value;
@@ -870,6 +1058,7 @@ const Home = () => {
                                             name="driver2Time"
                                             value={driver[1].fromTo}
                                             type="text"
+                                            onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[1].fromTo = e.target.value;
@@ -882,7 +1071,7 @@ const Home = () => {
                                 <tr>
                                     <th colSpan="3">B 321 duty</th>
                                     <th colSpan="2">Func</th>
-                                    <th colSpan="2">Time</th>
+                                    <th colSpan="2">Hours</th>
                                 </tr>
                                 {BDuty.map(({ STT, name, func, hours }) => (
                                     <tr key={STT}>
@@ -891,7 +1080,9 @@ const Home = () => {
                                                 name="name"
                                                 value={name}
                                                 type="text"
+                                                onBlur={() => { updateInput() }}
                                                 onChange={(e) => onChangeInputBDuty(e, STT)}
+
                                                 style={{ width: name === "" ? 5 + 'ch' : name.length + 1 + 'ch' }}
                                             />
                                         </td>
@@ -909,6 +1100,7 @@ const Home = () => {
                                                 name="hours"
                                                 value={hours}
                                                 type="text"
+                                                onBlur={() => { updateInput() }}
                                                 onChange={(e) => onChangeInputBDuty(e, STT)}
                                                 style={{ width: hours === "" ? 5 + 'ch' : hours.length + 1 + 'ch' }}
                                             />

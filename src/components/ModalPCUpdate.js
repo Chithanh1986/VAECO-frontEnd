@@ -31,7 +31,7 @@ const ModalPCUpdate = (props) => {
     }
 
     const isValidInputs = () => {
-        if (!pointCode.code || !pointCode.type) {
+        if (!pointCode.code || !pointCode.type || !pointCode.CRSWHour || !pointCode.MECHWHour || !pointCode.CRSWPoint || !pointCode.MECHWPoint) {
             toast.error("input is required");
             return false;
         }
@@ -95,10 +95,14 @@ const ModalPCUpdate = (props) => {
                                 onChange={(event) => handleOnchangeInput(event.target.value, "type")}
                                 value={pointCode.type}
                             >
-                                <option selected value="TRANSIT">TRANSIT</option>
+                                <option value="TRANSIT">TRANSIT</option>
                                 <option value="TERM">TERM</option>
                                 <option value="PRE">PRE</option>
+                                <option value="TERM-PRE">TERM + PRE</option>
                                 <option value="WO">WO</option>
+                                <option value="IDR">Indirect</option>
+                                <option value="CCCT">CCCT</option>
+                                <option value="CCDB">CCDB</option>
                             </select>
                         </div>
 

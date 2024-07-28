@@ -21,6 +21,10 @@ const ModalPointCode = (props) => {
     };
     const [pointCode, setPointCode] = useState(defaultPointCode);
 
+    useEffect(() => {
+        setPointCode(defaultPointCode);
+    }, [props.show])
+
     const handleOnchangeInput = (value, name) => {
         let _pointCode = _.cloneDeep(pointCode);
         _pointCode[name] = value;
@@ -28,7 +32,7 @@ const ModalPointCode = (props) => {
     }
 
     const isValidInputs = () => {
-        if (!pointCode.code || !pointCode.type) {
+        if (!pointCode.code || !pointCode.type || !pointCode.CRSWHour || !pointCode.MECHWHour || !pointCode.CRSWPoint || !pointCode.MECHWPoint) {
             toast.error("input is required");
             return false;
         }
@@ -99,6 +103,9 @@ const ModalPointCode = (props) => {
                                 <option value="PRE">PRE</option>
                                 <option value="TERM-PRE">TERM + PRE</option>
                                 <option value="WO">WO</option>
+                                <option value="IDR">Indirect</option>
+                                <option value="CCCT">CCCT</option>
+                                <option value="CCDB">CCDB</option>
                             </select>
                         </div>
 

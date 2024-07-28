@@ -3,7 +3,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import logovaeco from '../assets/images/logovaeco.png';
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Header.scss';
 import { UserContext } from "../context/UserContext";
