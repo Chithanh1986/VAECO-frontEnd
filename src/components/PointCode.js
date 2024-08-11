@@ -85,7 +85,7 @@ const PointCode = (props) => {
         setCurrentPage(+event.selected + 1);
     };
 
-    const handleCreatePointCode = async () => {
+    const handleCreatePointCode = () => {
         setIsShowModalPointCode(true)
     }
 

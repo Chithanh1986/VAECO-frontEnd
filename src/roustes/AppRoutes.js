@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useContext, useEffect } from 'react';
 import { UserContext } from "../context/UserContext";
 import PointCode from "../components/PointCode";
+import Report from "../components/Report";
 
 const AppRoutes = (props) => {
     const navigate = useNavigate();
@@ -31,6 +32,7 @@ const AppRoutes = (props) => {
                 <Route path="/changePass" element={<ChangePass />} />
                 <Route path="/resource" element={<Resource />} />
                 <Route path="/pointCode" element={<PointCode />} />
+                <Route path="/report" element={<Report />} />
             </Routes>
         </>
     )

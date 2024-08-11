@@ -8,7 +8,11 @@ const registerApi = (vae_user, vae_id, surname, name, division, station, passwor
     division = division.trim();
     station = station.trim();
     group = group.trim();
-    remark = remark.trim();
+    if (remark === undefined) {
+        remark = "";
+    } else {
+        remark = remark.trim();
+    }
     return instance.post("/api/register", { vae_user, vae_id, surname, name, division, station, password, group, remark });
 }
 
@@ -37,7 +41,12 @@ const updateUser = (userData) => {
     userData.division = userData.division.trim();
     userData.station = userData.station.trim();
     userData.group = userData.group.trim();
-    userData.remark = userData.remark.trim();
+    if (userData.remark === undefined) {
+        userData.remark = "";
+    } else {
+        userData.remark = userData.remark.trim();
+    }
+
     return instance.put("/api/update", { userData });
 }
 
@@ -119,8 +128,16 @@ const loadAllPC = () => {
     return instance.get(`/api/show_all_PC`);
 }
 
+const getGroupUsers = (station, division) => {
+    return instance.post(`/api/getGroupUsers`, { station, division });
+}
+
+const getPowerData = (date) => {
+    return instance.post(`/api/getPowerData`, { date });
+}
+
 export {
     registerApi, loginApi, fetchAllUsers, deleteUser, resetPassword, updateUser, logoutUser, getUserAccount,
     changePassword, searchApi, flightPlantApi, loadPlanApi, savePlanApi, loadTeamData, createPointCode, loadPointCode,
-    updatePointCode, deletePC, searchPointCode, loadAllPC
+    updatePointCode, deletePC, searchPointCode, loadAllPC, getGroupUsers, getPowerData
 };

@@ -107,6 +107,7 @@ const ModalUpdate = (props) => {
                                 <option value="Team 2">Team 2</option>
                                 <option value="Team 3">Team 3</option>
                                 <option value="Team 4">Team 4</option>
+                                <option value="Store">Store</option>
                             </select>
                         </div>
 
@@ -124,6 +125,7 @@ const ModalUpdate = (props) => {
                                 <option value="UIH">UIH</option>
                                 <option value="TBB">TBB</option>
                                 <option value="VCL">VCL</option>
+                                <option value="PXU">PXU</option>
                             </select>
                         </div>
 

@@ -1,10 +1,9 @@
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
 import { toast } from 'react-toastify';
 import { createPointCode } from '../services/UserService';
-import { UserContext } from '../context/UserContext';
 
 const ModalPointCode = (props) => {
     const defaultPointCode = {
@@ -42,7 +41,6 @@ const ModalPointCode = (props) => {
     const handleConfirmCreate = async () => {
         let check = isValidInputs();
         if (check === true) {
-
             let res = await createPointCode(pointCode);
             if (res && res.EC === 0) {
                 toast.success(res.EM)

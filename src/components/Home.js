@@ -507,6 +507,19 @@ const Home = () => {
                 }
             }
 
+            switch (individual.type) {
+                case "NC":
+                    individual.WPoint = individual.WPoint * 2;
+                    break;
+                case "TC":
+                    individual.WPoint = individual.WPoint * 1.2;
+                    break;
+                // case "-":
+                //     individual.WPoint = individual.WPoint * 3;
+                //     break;
+                default:
+                    break;
+            }
             updateData[index].work = individual.work;
             updateData[index].WPoint = individual.WPoint.toFixed(2);
             updateData[index].WHour = individual.WHour.toFixed(0);
@@ -533,7 +546,6 @@ const Home = () => {
             dataToPowerSource[index].fromTo = ""
         });
         setPowerSource(dataToPowerSource);
-        updateInput();
     }
 
     return (
@@ -553,7 +565,7 @@ const Home = () => {
                     <DatePicker
                         selected={date}
                         onChange={date => setDate(date)}
-                        minDate={user.account.group === "admin" ? "" : new Date().setDate(new Date().getDate() - 1)}//{new Date().setDate(new Date().getDate() - 10)}
+                        minDate={user.account.group === "admin" ? "" : new Date().setDate(new Date().getDate() - 1)}
                         maxDate={new Date().setDate(new Date().getDate() + 1)}
                         dateFormat="dd/MM/YYYY"
                     />
@@ -644,6 +656,7 @@ const Home = () => {
                                                 value={Remark}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: Remark === "" ? 5 + 'ch' : Remark.length + 1 + 'ch' }}
                                             />
                                         </td>
@@ -724,6 +737,7 @@ const Home = () => {
                                             <input
                                                 name="code"
                                                 value={code}
+                                                onBlur={() => { updateInput() }}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
                                                 style={{ width: code === "" ? 5 + 'ch' : code.length + 2 + 'ch' }}
@@ -760,6 +774,7 @@ const Home = () => {
                                             <input
                                                 name="WHour"
                                                 value={WHour}
+                                                onBlur={() => { updateInput() }}
                                                 type="text"
                                                 onChange={(e) => onChangeInputWO(e, STT)}
                                                 style={{ width: WHour === "" ? 5 + 'ch' : WHour.length + 2 + 'ch' }}
@@ -1134,6 +1149,7 @@ const Home = () => {
                                                 value={name}
                                                 type="text"
                                                 onChange={(e) => onChangeInputPower(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: name === "" ? 5 + 'ch' : name.length + 2 + 'ch' }}
                                             />
                                         </td>
@@ -1153,7 +1169,9 @@ const Home = () => {
                                             <select
                                                 className='form-select'
                                                 name="type"
+                                                value={type}
                                                 onChange={(e) => onChangeInputPower(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                             >
                                                 <option selected value=""></option>
                                                 <option value="TC">TC</option>

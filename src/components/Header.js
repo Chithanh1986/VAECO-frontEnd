@@ -43,13 +43,26 @@ const Header = (props) => {
                             <Navbar.Collapse id="basic-navbar-nav">
                                 <Nav activeKey={location.pathname} className="me-auto">
                                     <Nav.Link href="/home" >Flight service</Nav.Link>
-                                    <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
-                                    <Nav.Link href="/Resource">Resource</Nav.Link>
                                     <Nav.Link href="/pointCode">Point Code</Nav.Link>
-                                    <NavDropdown title="Admin" id="basic-nav-dropdown">
-                                        <NavDropdown.Item href="/register">Register</NavDropdown.Item>
-                                        <NavDropdown.Item href="/users">Manage users</NavDropdown.Item>
-                                    </NavDropdown>
+
+                                    {user.account.group === "leader" &&
+                                        <>
+                                            <Nav.Link href="/Resource">Resource</Nav.Link>
+                                            <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
+                                        </>
+                                    }
+
+                                    {user.account.group === "admin" &&
+                                        <>
+                                            <Nav.Link href="/Resource">Resource</Nav.Link>
+                                            <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
+                                            <NavDropdown title="Admin" id="basic-nav-dropdown">
+                                                <NavDropdown.Item href="/register">Register</NavDropdown.Item>
+                                                <NavDropdown.Item href="/users">Manage users</NavDropdown.Item>
+                                                <NavDropdown.Item href="/report">Report</NavDropdown.Item>
+                                            </NavDropdown>
+                                        </>
+                                    }
                                 </Nav>
                                 <Nav>
                                     <NavDropdown title={userLogin} id="basic-nav-dropdown">
