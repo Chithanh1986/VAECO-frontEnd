@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useRef } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import './Report.scss';
 import { toast } from 'react-toastify';
 import { getGroupUsers, getPowerData } from '../services/UserService';
+import * as XLSX from 'xlsx';
+import { read, writeFileXLSX } from "xlsx";
 
 const Report = () => {
     const [startDate, setStartDate] = useState();
@@ -24,6 +26,7 @@ const Report = () => {
     const [VCL, setVCL] = useState();
     const [TBB, setTBB] = useState();
     const [VDH, setVDH] = useState();
+    const ref = useRef(null);
 
     const handleClear = () => {
         setStartDate();
@@ -370,6 +373,24 @@ const Report = () => {
         }
     }
 
+    const handleExport = () => {
+        if (DADTeam1 && VDH) {
+            const element = ref.current;
+
+            // Extract Data (create a workbook object from the table)
+            var workbook = XLSX.utils.table_to_book(element);
+
+            // Process Data (add a new row)
+            var ws = workbook.Sheets["Sheet1"];
+            // XLSX.utils.sheet_add_aoa(ws, [["Created " + new Date().toISOString()]], { origin: -1 });
+
+            // Package and Release Data (`writeFile` tries to write and save an XLSB file)
+            XLSX.writeFile(workbook, "Report.xlsx");
+        } else {
+            toast.error("Missing data")
+        }
+    }
+
     return (
         <div>
             <div className='header-container'>
@@ -393,9 +414,11 @@ const Report = () => {
                     onClick={() => handleClear()}>Clear</button>
                 <button className={startDate && endDate ? 'btn active' : 'btn'}
                     onClick={() => handleLoadReport()}>Load report</button>
+                <button className="btn info"
+                    onClick={() => handleExport()}>Export</button>
             </div>
 
-            <div className='users-container'>
+            <div ref={ref} className='users-container'>
                 <div>
                     <h1>Report list</h1>
                 </div>
@@ -407,7 +430,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>A. TEAM 1</th>
+                                <th colSpan={7}>A. TEAM 1 DAD</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -445,7 +468,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>B. TEAM 2</th>
+                                <th colSpan={7}>B. TEAM 2 DAD</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -483,7 +506,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>C. TEAM 3</th>
+                                <th colSpan={7}>C. TEAM 3 DAD</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -521,7 +544,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>D. TEAM 4</th>
+                                <th colSpan={7}>D. TEAM 4 DAD</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -565,7 +588,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>A. TEAM 1</th>
+                                <th colSpan={7}>A. TEAM 1 CXR</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -603,7 +626,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>B. TEAM 2</th>
+                                <th colSpan={7}>B. TEAM 2 CXR</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -641,7 +664,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>C. TEAM 3</th>
+                                <th colSpan={7}>C. TEAM 3 CXR</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>
@@ -679,7 +702,7 @@ const Report = () => {
                     <table className="table-bordered " responsive>
                         <thead>
                             <tr>
-                                <th colSpan={7}>D. TEAM 4</th>
+                                <th colSpan={7}>D. TEAM 4 CXR</th>
                             </tr>
                             <tr>
                                 <th scope="col">No</th>

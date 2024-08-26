@@ -67,8 +67,13 @@ const searchApi = (searchValue) => {
     return instance.post(`/api/search_user`, { searchValue });
 }
 
-const flightPlantApi = (flightShip1DAD, flightShip2DAD, flightShip1CXR, flightShip2CXR) => { //trim data at server side
-    return instance.post("/api/flight_plan", { flightShip1DAD, flightShip2DAD, flightShip1CXR, flightShip2CXR });
+const flightPlantApi = (flightShip1DAD, flightShip2DAD, flightShip1CXR, flightShip2CXR,
+    flightDataVDH, flightDataHUI, flightDataVCL, flightDataUIH, flightDataTBB, flightDataPXU
+) => { //trim data at server side
+    return instance.post("/api/flight_plan", {
+        flightShip1DAD, flightShip2DAD, flightShip1CXR, flightShip2CXR,
+        flightDataVDH, flightDataHUI, flightDataVCL, flightDataUIH, flightDataTBB, flightDataPXU
+    });
 }
 
 const loadPlanApi = (date, ship, station) => {

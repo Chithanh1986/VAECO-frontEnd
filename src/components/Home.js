@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import './Home.scss';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -25,6 +25,7 @@ const Home = () => {
     const [team, setTeam] = useState();
     const [pointCode, setPointCode] = useState();
     const { user } = useContext(UserContext);
+    const ref = useRef(null);
 
     const handleClear = () => {
         setDate(null);
@@ -37,19 +38,23 @@ const Home = () => {
             let serverData = await loadPlanApi(new Date(date).toLocaleDateString('fr-FR'), ship, station);
             let serverPointCode = await loadAllPC();
             if (+serverData.EC === 0 && serverPointCode.EC === 0) {
-                setServerDate(serverData.DT.datePlan);
-                setServerShip(serverData.DT.ship);
-                setServerStation(serverData.DT.station);
-                setRev(serverData.DT.rev);
-                setShipLeader(serverData.DT.shipLeader);
-                setHandovership(serverData.DT.handoverShip);
-                setDriver(serverData.DT.driver);
-                setBDuty(serverData.DT.BDuty);
-                setPowerSource(serverData.DT.powerSource);
-                setWOPlan(serverData.DT.WOData);
-                setFlightPlan(serverData.DT.planData);
-                setPointCode(serverPointCode.DT);
-                toast.success(serverData.EM)
+                if (serverData.DT.planData[0].Route !== undefined) {
+                    setServerDate(serverData.DT.datePlan);
+                    setServerShip(serverData.DT.ship);
+                    setServerStation(serverData.DT.station);
+                    setRev(serverData.DT.rev);
+                    setShipLeader(serverData.DT.shipLeader);
+                    setHandovership(serverData.DT.handoverShip);
+                    setDriver(serverData.DT.driver);
+                    setBDuty(serverData.DT.BDuty);
+                    setPowerSource(serverData.DT.powerSource);
+                    setWOPlan(serverData.DT.WOData);
+                    setFlightPlan(serverData.DT.planData);
+                    setPointCode(serverPointCode.DT);
+                    toast.success(serverData.EM)
+                } else {
+                    toast.error("Flight plan is not found")
+                }
             } else {
                 toast.error(serverData.EM)
             }
@@ -143,16 +148,17 @@ const Home = () => {
     const handlePowerAddRow = () => {
         let addRow = powerSource;
         let No = powerSource.length + 1;
-        setPowerSource(null)
+        setPowerSource(null);
         addRow.push({
             STT: No,
             ID: "",
             name: "",
-            work: "0",
-            point: "0",
+            work: 0,
+            WPoint: 0,
             hours: "",
             type: "",
-            fromTo: ""
+            fromTo: "",
+            remark: ""
         });
         setTimeout(() => setPowerSource(addRow), 1);
     };
@@ -424,17 +430,19 @@ const Home = () => {
                 })
 
                 //search leader
-                let pointLeader = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "SL");
-                if (pointLeader === undefined) {
-                    pointLeaderError = 1;
-                } else {
-                    if (individual.name.trim() === shipLeader[0].leader.trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[0].hours);
-                        individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[0].hours);
-                    }
-                    if (individual.name.trim() === shipLeader[1].leader.trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[1].hours);
-                        individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[1].hours);
+                if (shipLeader[0].leader.trim() !== "" || shipLeader[1].leader.trim() !== "") {
+                    let pointLeader = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "SL");
+                    if (pointLeader === undefined) {
+                        pointLeaderError = 1;
+                    } else {
+                        if (individual.name.trim() === shipLeader[0].leader.trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[0].hours);
+                            individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[0].hours);
+                        }
+                        if (individual.name.trim() === shipLeader[1].leader.trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointLeader.CRSWPoint) / 12 * (+shipLeader[1].hours);
+                            individual.WHour = (+individual.WHour) + (+pointLeader.CRSWHour) / 12 * (+shipLeader[1].hours);
+                        }
                     }
                 }
 
@@ -456,55 +464,66 @@ const Home = () => {
                 }
 
                 //search handover ship
-                let pointStartShip = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "HOS");
-                if (pointStartShip === undefined) {
-                    pointStartShipError = 1;
-                } else {
-                    if (individual.name.trim() === handoverShip[2].trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
-                        individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
-                    }
-                    if (individual.name.trim() === handoverShip[3].trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
-                        individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
+                if (handoverShip[2].trim() !== "" || handoverShip[3].trim() !== "") {
+                    let pointStartShip = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "HOS");
+                    if (pointStartShip === undefined) {
+                        pointStartShipError = 1;
+                    } else {
+                        if (individual.name.trim() === handoverShip[2].trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
+                            individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
+                        }
+                        if (individual.name.trim() === handoverShip[3].trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointStartShip.CRSWPoint);
+                            individual.WHour = (+individual.WHour) + (+pointStartShip.CRSWHour);
+                        }
                     }
                 }
 
                 //search driver
-                let pointDriver = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "DRI");
-                if (pointDriver === undefined) {
-                    pointDriverError = 1;
-                } else {
-                    if (individual.name.trim() === driver[0].driver.trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[0].hours);
-                        individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[0].hours);
-                    }
-                    if (individual.name.trim() === driver[1].driver.trim()) {
-                        individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[1].hours);
-                        individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[1].hours);
+                if (driver[0].driver.trim() !== "" || driver[1].driver.trim() !== "") {
+                    let pointDriver = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "DRI");
+                    if (pointDriver === undefined) {
+                        pointDriverError = 1;
+                    } else {
+                        if (individual.name.trim() === driver[0].driver.trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[0].hours);
+                            individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[0].hours);
+                        }
+                        if (individual.name.trim() === driver[1].driver.trim()) {
+                            individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[1].hours);
+                            individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[1].hours);
+                        }
                     }
                 }
 
                 //search B duty
-                let pointBDuty = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "BDT");
-                if (pointBDuty === undefined) {
-                    pointBDutyError = 1;
-                } else {
-                    let totalHours = 0;
-                    BDuty.map((obj, index) => { totalHours = totalHours + (+obj.hours) });
-                    BDuty.map((obj, index) => {
-                        if (individual.name.trim() === obj.name.trim()) {
-                            if (totalHours >= 24) {
-                                individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / totalHours * (+obj.hours);
-                                individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / totalHours * (+obj.hours);
+                let checkBDuty = false;
+                BDuty.map((individual, index) => {
+                    if (individual.name.trim() !== "") { checkBDuty = true }
+                })
+                if (checkBDuty) {
+                    let pointBDuty = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "BDT");
+                    if (pointBDuty === undefined) {
+                        pointBDutyError = 1;
+                    } else {
+                        let totalHours = 0;
+                        BDuty.map((obj, index) => { totalHours = totalHours + (+obj.hours) });
+                        BDuty.map((obj, index) => {
+                            if (individual.name.trim() === obj.name.trim()) {
+                                if (totalHours >= 24) {
+                                    individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / totalHours * (+obj.hours);
+                                    individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / totalHours * (+obj.hours);
+                                }
+                                else {
+                                    individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / 24 * (+obj.hours);
+                                    individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / 24 * (+obj.hours);
+                                }
                             }
-                            else {
-                                individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / 24 * (+obj.hours);
-                                individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / 24 * (+obj.hours);
-                            }
-                        }
-                    })
+                        })
+                    }
                 }
+
             }
 
             switch (individual.type) {
@@ -534,23 +553,110 @@ const Home = () => {
 
     const handleLoadTeam = async (team, serverStation) => {
         let data = await loadTeamData(team, serverStation);
-        let dataToPowerSource = powerSource.slice(0, data.DT.length);
-        data.DT.map((individual, index) => {
-            dataToPowerSource[index].STT = index + 1;
-            dataToPowerSource[index].ID = individual.vae_id;
-            dataToPowerSource[index].name = individual.name.toUpperCase();
-            dataToPowerSource[index].work = 0;
-            dataToPowerSource[index].point = 0;
-            dataToPowerSource[index].hours = "";
-            dataToPowerSource[index].type = "";
-            dataToPowerSource[index].fromTo = ""
-        });
-        setPowerSource(dataToPowerSource);
+        if (data.DT.length > 1) {
+            let dataToPowerSource = powerSource.slice(0, data.DT.length);
+            data.DT.map((individual, index) => {
+                dataToPowerSource[index].STT = index + 1;
+                dataToPowerSource[index].ID = individual.vae_id;
+                dataToPowerSource[index].name = individual.name.toUpperCase();
+                dataToPowerSource[index].work = 0;
+                dataToPowerSource[index].WPoint = 0;
+                dataToPowerSource[index].hours = "";
+                dataToPowerSource[index].type = "";
+                dataToPowerSource[index].fromTo = "";
+                dataToPowerSource[index].remark = ""
+            });
+            setPowerSource(dataToPowerSource);
+        } else {
+            toast.error("No data found")
+        }
+
+    }
+
+    const handleExport = () => {
+        if (flightPlan && WOPlan && powerSource) {
+            let exportWOData = [];
+            let exportHeader = [["Station: " + serverStation + " - Date: " + serverDate + " - Rev: " + rev]]
+            /* generate worksheet and workbook */
+            const worksheet = XLSX.utils.aoa_to_sheet(exportHeader);
+            XLSX.utils.sheet_add_json(worksheet, flightPlan, { origin: { r: 1, c: 0 } });
+            // Add WOPlan
+            WOPlan.map((individual, index) => {
+                exportWOData[index] = {
+                    STT: individual.STT, code: individual.code, ACReg: individual.ACReg, WONo: individual.WONo, WOMerge: "",
+                    Desc: individual.Desc, DescMerge1: "", DescMerge2: "", DescMerge3: "", DescMerge4: "", WHour: individual.WHour,
+                    CRS: individual.CRS, MECH1: individual.MECH1, MECH2: individual.MECH2, MECH3: individual.MECH3
+                }
+            })
+            XLSX.utils.sheet_add_json(worksheet, exportWOData, { origin: { r: flightPlan.length + 1, c: 0 } });
+            let merge = [
+                { s: { r: flightPlan.length + 1, c: 3 }, e: { r: flightPlan.length + 1, c: 4 } },
+                { s: { r: flightPlan.length + 1, c: 5 }, e: { r: flightPlan.length + 1, c: 9 } }
+            ];
+            exportWOData.map((individual, index) => {
+                merge.push(
+                    { s: { r: flightPlan.length + 2 + index, c: 3 }, e: { r: flightPlan.length + 2 + index, c: 4 } },
+                    { s: { r: flightPlan.length + 2 + index, c: 5 }, e: { r: flightPlan.length + 2 + index, c: 9 } }
+                )
+            })
+            //Add powerSource
+            let exportPower = [
+                ["Ship leader", "", shipLeader[0].leader, "", "", shipLeader[0].hours, shipLeader[0].fromTo, ""],
+                ["", "", shipLeader[1].leader, "", "", shipLeader[1].hours, shipLeader[1].fromTo, ""],
+                ["Work assign", "", handoverShip[0], "", "WO Evaluation", "", handoverShip[1], ""],
+                ["Start ship", "", handoverShip[2], "", "End ship", "", handoverShip[3], ""],
+                ["Driver", "", driver[0].driver, "", "", driver[0].hours, driver[0].fromTo, ""],
+                ["", "", driver[1].driver, "", "", driver[1].hours, driver[1].fromTo, ""],
+                ["", "", driver[2].driver, "", "", "stby", "", ""],
+                ["B 321 duty", "", "", "", "Func", "", "Hours", ""]
+            ];
+            BDuty.map((individual, index) => {
+                exportPower.push([individual.name, "", "", "", individual.func, "", individual.hours, ""])
+            })
+            exportPower.push(["ID", "Name", "Work", "WPoint", "Hours", "Type", "From to", "Remark"])
+            powerSource.map((individual, index) => {
+                exportPower.push([
+                    individual.ID, individual.name, individual.work, individual.WPoint, individual.hours,
+                    individual.type, individual.fromTo, individual.remark
+                ])
+            })
+            XLSX.utils.sheet_add_aoa(worksheet, exportPower, { origin: { r: 0, c: 15 } });
+            merge.push(
+                { s: { r: 0, c: 15 }, e: { r: 1, c: 16 } },
+                { s: { r: 0, c: 17 }, e: { r: 0, c: 19 } }, { s: { r: 0, c: 21 }, e: { r: 0, c: 22 } },
+                { s: { r: 1, c: 17 }, e: { r: 1, c: 19 } }, { s: { r: 1, c: 21 }, e: { r: 1, c: 22 } },
+                { s: { r: 2, c: 15 }, e: { r: 2, c: 16 } }, { s: { r: 2, c: 17 }, e: { r: 2, c: 18 } },
+                { s: { r: 2, c: 19 }, e: { r: 2, c: 20 } }, { s: { r: 2, c: 21 }, e: { r: 2, c: 22 } },
+                { s: { r: 3, c: 15 }, e: { r: 3, c: 16 } }, { s: { r: 3, c: 17 }, e: { r: 3, c: 18 } },
+                { s: { r: 3, c: 19 }, e: { r: 3, c: 20 } }, { s: { r: 3, c: 21 }, e: { r: 3, c: 22 } },
+                { s: { r: 4, c: 15 }, e: { r: 6, c: 16 } },
+                { s: { r: 4, c: 17 }, e: { r: 4, c: 19 } }, { s: { r: 4, c: 21 }, e: { r: 4, c: 22 } },
+                { s: { r: 5, c: 17 }, e: { r: 5, c: 19 } }, { s: { r: 5, c: 21 }, e: { r: 5, c: 22 } },
+                { s: { r: 6, c: 17 }, e: { r: 6, c: 19 } }, { s: { r: 6, c: 21 }, e: { r: 6, c: 22 } },
+                { s: { r: 7, c: 15 }, e: { r: 7, c: 18 } }, { s: { r: 7, c: 19 }, e: { r: 7, c: 20 } }, { s: { r: 7, c: 21 }, e: { r: 7, c: 22 } },
+
+            )
+            BDuty.map((individual, index) => {
+                merge.push({ s: { r: 8 + index, c: 15 }, e: { r: 8 + index, c: 18 } },
+                    { s: { r: 8 + index, c: 19 }, e: { r: 8 + index, c: 20 } },
+                    { s: { r: 8 + index, c: 21 }, e: { r: 8 + index, c: 22 } },)
+            })
+            worksheet["!merges"] = merge;
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+
+            /* create an XLSX file and try to save to Presidents.xlsx */
+            XLSX.writeFile(workbook, "flightPlan.xlsx");
+        } else {
+            toast.error("Missing data")
+        }
+
     }
 
     return (
         <div>
             <div className='container'>
+                {/* header */}
                 <div className='flight-container'>
                     <label>Choose station :</label>
                     <select
@@ -560,6 +666,12 @@ const Home = () => {
                     >
                         <option selected value="DAD">DAD</option>
                         <option value="CXR">CXR</option>
+                        <option value="VDH">VDH</option>
+                        <option value="HUI">HUI</option>
+                        <option value="VCL">VCL</option>
+                        <option value="UIH">UIH</option>
+                        <option value="TBB">TBB</option>
+                        <option value="PXU">PXU</option>
                     </select>
                     <label >   Choose date :</label>
                     <DatePicker
@@ -588,13 +700,18 @@ const Home = () => {
                     <button className={date ? 'btn active' : 'btn'}
                         onClick={() => handleSave()}>Save plan</button>
 
+                    <button className="btn info"
+                        onClick={() => handleExport()}>Export</button>
+
                 </div >
             </div>
+
             <div className='plan-container'>
                 {(flightPlan && WOPlan && powerSource) && (
                     <div className='subPlan-container'>
                         <h3>Station: {serverStation}, Date: {serverDate}, Rev: {rev}</h3>
                         <table className='table-striped table-bordered' responsive>
+                            {/* Flight plan */}
                             <thead>
                                 <tr>
                                     <th>STT</th>
@@ -639,7 +756,14 @@ const Home = () => {
                                             {Route}
                                         </td>
                                         <td>
-                                            {ETA}
+                                            <input
+                                                name="ETA"
+                                                value={ETA}
+                                                type="text"
+                                                onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
+                                                style={{ width: ETA === "" ? 5 + 'ch' : ETA.length + 'ch' }}
+                                            />
                                         </td>
                                         <td>
                                             <input
@@ -647,6 +771,7 @@ const Home = () => {
                                                 value={ETD}
                                                 type="text"
                                                 onChange={(e) => onChangeInput(e, STT)}
+                                                onBlur={() => { updateInput() }}
                                                 style={{ width: ETD === "" ? 5 + 'ch' : ETD.length + 'ch' }}
                                             />
                                         </td>
@@ -712,6 +837,8 @@ const Home = () => {
                                     </tr>
                                 ))}
                             </tbody>
+
+                            {/* WO  */}
                             <thead>
                                 <tr>
                                     <th colSpan="15">WO/jobcard today</th>
@@ -832,8 +959,10 @@ const Home = () => {
                                 </tr>
                             </tbody>
                         </table>
+
                         <table className='table-striped table-bordered' responsive>
                             <tbody>
+                                {/* Leader */}
                                 <tr>
                                     <th rowSpan="2" colSpan="2">Ship leader</th>
                                     <td colSpan="3">
@@ -863,10 +992,10 @@ const Home = () => {
                                                 setShipLeader(leaderData);
                                             }}
                                             onBlur={() => { updateInput() }}
-                                            style={{ width: shipLeader[0].hours === "" ? "Hours ".lenght + 'ch' : shipLeader[0].hours.length + 2 + 'ch' }}
+                                            style={{ width: shipLeader[0].hours === "" ? "Hours ".length + 'ch' : shipLeader[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td>
+                                    <td colSpan="2">
                                         <input
                                             name="fromTo"
                                             value={shipLeader[0].fromTo}
@@ -910,7 +1039,7 @@ const Home = () => {
                                             style={{ width: shipLeader[1].hours === "" ? 5 + 'ch' : shipLeader[1].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td>
+                                    <td colSpan="2">
                                         <input
                                             name="fromTo"
                                             value={shipLeader[1].fromTo}
@@ -926,7 +1055,7 @@ const Home = () => {
                                 </tr>
                                 <tr>
                                     <th colSpan="2">Work assign</th>
-                                    <td colSpan="5">
+                                    <td colSpan="2">
                                         <input
                                             name="WorkAssign"
                                             value={handoverShip[0]}
@@ -940,10 +1069,8 @@ const Home = () => {
                                             style={{ width: handoverShip[0] === "" ? 5 + 'ch' : handoverShip[0].length + 2 + 'ch' }}
                                         />
                                     </td>
-                                </tr>
-                                <tr>
                                     <th colSpan="2">WO evaluation</th>
-                                    <td colSpan="5">
+                                    <td colSpan="2">
                                         <input
                                             name="WOEval"
                                             value={handoverShip[1]}
@@ -958,9 +1085,11 @@ const Home = () => {
                                         />
                                     </td>
                                 </tr>
+
+                                {/* Start ship */}
                                 <tr>
                                     <th colSpan="2">Start Ship</th>
-                                    <td colSpan="5">
+                                    <td colSpan="2">
                                         <input
                                             name="startShip"
                                             value={handoverShip[2]}
@@ -974,10 +1103,8 @@ const Home = () => {
                                             style={{ width: handoverShip[2] === "" ? 5 + 'ch' : handoverShip[2].length + 2 + 'ch' }}
                                         />
                                     </td>
-                                </tr>
-                                <tr>
                                     <th colSpan="2">End ship</th>
-                                    <td colSpan="5">
+                                    <td colSpan="2">
                                         <input
                                             name="endShip"
                                             value={handoverShip[3]}
@@ -992,8 +1119,10 @@ const Home = () => {
                                         />
                                     </td>
                                 </tr>
+
+                                {/* Driver */}
                                 <tr>
-                                    <th rowSpan="2" colSpan="2">Driver</th>
+                                    <th rowSpan="3" colSpan="2">Driver</th>
                                     <td colSpan="3">
                                         <input
                                             name="driver1"
@@ -1024,7 +1153,7 @@ const Home = () => {
                                             style={{ width: driver[0].hours === "" ? "Hours ".length + 'ch' : driver[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td>
+                                    <td colSpan="2">
                                         <input
                                             name="driver1Time"
                                             value={driver[0].fromTo}
@@ -1045,12 +1174,13 @@ const Home = () => {
                                             name="driver2"
                                             value={driver[1].driver}
                                             type="text"
+                                            placeholder='Name'
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[1].driver = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[1].driver === "" ? 5 + 'ch' : driver[1].driver.length + 2 + 'ch' }}
+                                            style={{ width: driver[1].driver === "" ? "Name  ".length + 'ch' : driver[1].driver.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
@@ -1058,39 +1188,58 @@ const Home = () => {
                                             name="driver2Hours"
                                             value={driver[1].hours}
                                             type="text"
-                                            placeholder='Stanby'
+                                            placeholder='Hours'
                                             onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[1].hours = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[1].hours === "" ? 5 + 'ch' : driver[1].hours.length + 2 + 'ch' }}
+                                            style={{ width: driver[1].hours === "" ? "Hours ".length + 'ch' : driver[1].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td>
+                                    <td colSpan="2">
                                         <input
                                             name="driver2Time"
                                             value={driver[1].fromTo}
                                             type="text"
+                                            placeholder='From to'
                                             onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
                                                 driverData[1].fromTo = e.target.value;
                                                 setDriver(driverData);
                                             }}
-                                            style={{ width: driver[1].fromTo === "" ? 5 + 'ch' : driver[1].fromTo.length + 2 + 'ch' }}
+                                            style={{ width: driver[1].fromTo === "" ? "From to".length + 'ch' : driver[1].fromTo.length + 2 + 'ch' }}
                                         />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th colSpan="3">B 321 duty</th>
+                                    <td colSpan="3">
+                                        <input
+                                            name="driver3"
+                                            value={driver[2].driver}
+                                            type="text"
+                                            onChange={(e) => {
+                                                let driverData = [...driver];
+                                                driverData[2].driver = e.target.value.toUpperCase();
+                                                setDriver(driverData);
+                                            }}
+                                            style={{ width: driver[2].driver === "" ? 5 + 'ch' : driver[2].driver.length + 2 + 'ch' }}
+                                        />
+                                    </td>
+                                    <td colSpan="3">{driver[2].fromTo}</td>
+                                </tr>
+
+                                {/* B duty */}
+                                <tr>
+                                    <th colSpan="4">B 321 duty</th>
                                     <th colSpan="2">Func</th>
                                     <th colSpan="2">Hours</th>
                                 </tr>
                                 {BDuty.map(({ STT, name, func, hours }) => (
                                     <tr key={STT}>
-                                        <td colSpan="3">
+                                        <td colSpan="4">
                                             <input
                                                 name="name"
                                                 value={name}
@@ -1098,7 +1247,7 @@ const Home = () => {
                                                 onBlur={() => { updateInput() }}
                                                 onChange={(e) => onChangeInputBDuty(e, STT)}
 
-                                                style={{ width: name === "" ? 5 + 'ch' : name.length + 1 + 'ch' }}
+                                                style={{ width: name === "" ? 5 + 'ch' : name.length + 2 + 'ch' }}
                                             />
                                         </td>
                                         <td colSpan="2">
@@ -1122,17 +1271,20 @@ const Home = () => {
                                         </td>
                                     </tr>
                                 ))}
+
+                                {/* Power source */}
                                 <tr>
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Work</th>
                                     <th>WPoint</th>
-                                    <th>WHour</th>
+                                    {/* <th>WHour</th> */}
                                     <th>Hours</th>
                                     <th>Type</th>
                                     <th>From to</th>
+                                    <th>Remark</th>
                                 </tr>
-                                {powerSource.map(({ STT, ID, name, work, WPoint, WHour, hours, type, fromTo }) => (
+                                {powerSource.map(({ STT, ID, name, work, WPoint, WHour, hours, type, fromTo, remark }) => (
                                     <tr key={STT}>
                                         <td >
                                             <input
@@ -1155,7 +1307,7 @@ const Home = () => {
                                         </td>
                                         <td >{work}</td>
                                         <td >{WPoint}</td>
-                                        <td >{WHour}</td>
+                                        {/* <td >{WHour}</td> */}
                                         <td >
                                             <input
                                                 name="hours"
@@ -1176,6 +1328,9 @@ const Home = () => {
                                                 <option selected value=""></option>
                                                 <option value="TC">TC</option>
                                                 <option value="NC">NC</option>
+                                                <option value="B">B</option>
+                                                <option value="F">F</option>
+                                                <option value="O">O</option>
                                             </select>
                                         </td>
                                         <td >
@@ -1187,10 +1342,19 @@ const Home = () => {
                                                 style={{ width: fromTo === "" ? 5 + 'ch' : fromTo.length + 2 + 'ch' }}
                                             />
                                         </td>
+                                        <td >
+                                            <input
+                                                name="remark"
+                                                value={remark}
+                                                type="text"
+                                                onChange={(e) => onChangeInputPower(e, STT)}
+                                                style={{ width: remark === "" ? 5 + 'ch' : remark.length + 2 + 'ch' }}
+                                            />
+                                        </td>
                                     </tr>
                                 ))}
                                 <tr>
-                                    <th colSpan="7">
+                                    <th colSpan="8">
                                         <button className='btn btn-info'
                                             onClick={() => handlePowerAddRow()}>Add row</button>
                                         <button className='btn btn-info'
@@ -1198,7 +1362,7 @@ const Home = () => {
                                     </th>
                                 </tr>
                                 <tr>
-                                    <th colSpan="7">
+                                    <th colSpan="8">
                                         <div className='power-container'>
                                             <label>Select team:</label>
                                             <select

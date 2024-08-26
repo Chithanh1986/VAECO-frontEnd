@@ -20,6 +20,11 @@
         &:hover {
             background-color: rgb(210, 208, 208);
         }
+
+        &.info {
+            background-color: #3e99fb;
+            color: white;
+        }
     }
 
     .react-datepicker__input-container input {
