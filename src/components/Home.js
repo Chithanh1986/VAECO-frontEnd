@@ -25,7 +25,6 @@ const Home = () => {
     const [team, setTeam] = useState();
     const [pointCode, setPointCode] = useState();
     const { user } = useContext(UserContext);
-    const ref = useRef(null);
 
     const handleClear = () => {
         setDate(null);
@@ -504,20 +503,25 @@ const Home = () => {
                 })
                 if (checkBDuty) {
                     let pointBDuty = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "BDT");
-                    if (pointBDuty === undefined) {
+                    let pointBSTB = pointCode.find((obj) => obj.airline === station && obj.type === "IDR" && obj.code === "BSTB");
+                    if (pointBDuty === undefined || pointBSTB === undefined) {
                         pointBDutyError = 1;
                     } else {
                         let totalHours = 0;
                         BDuty.map((obj, index) => { totalHours = totalHours + (+obj.hours) });
                         BDuty.map((obj, index) => {
                             if (individual.name.trim() === obj.name.trim()) {
-                                if (totalHours >= 24) {
-                                    individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / totalHours * (+obj.hours);
-                                    individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / totalHours * (+obj.hours);
-                                }
-                                else {
-                                    individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / 24 * (+obj.hours);
-                                    individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / 24 * (+obj.hours);
+                                if (obj.type === "STBY") {
+                                    individual.WPoint = (+individual.WPoint) + (+pointBSTB.CRSWPoint) / 12 * (+obj.hours);
+                                } else {
+                                    if (totalHours >= 24) {
+                                        individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / totalHours * (+obj.hours);
+                                        individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / totalHours * (+obj.hours);
+                                    }
+                                    else {
+                                        individual.WPoint = (+individual.WPoint) + (+pointBDuty.CRSWPoint) / 24 * (+obj.hours);
+                                        individual.WHour = (+individual.WHour) + (+pointBDuty.CRSWHour) / 24 * (+obj.hours);
+                                    }
                                 }
                             }
                         })
@@ -554,18 +558,21 @@ const Home = () => {
     const handleLoadTeam = async (team, serverStation) => {
         let data = await loadTeamData(team, serverStation);
         if (data.DT.length > 1) {
-            let dataToPowerSource = powerSource.slice(0, data.DT.length);
+            let dataToPowerSource = [];
             data.DT.map((individual, index) => {
-                dataToPowerSource[index].STT = index + 1;
-                dataToPowerSource[index].ID = individual.vae_id;
-                dataToPowerSource[index].name = individual.name.toUpperCase();
-                dataToPowerSource[index].work = 0;
-                dataToPowerSource[index].WPoint = 0;
-                dataToPowerSource[index].hours = "";
-                dataToPowerSource[index].type = "";
-                dataToPowerSource[index].fromTo = "";
-                dataToPowerSource[index].remark = ""
+                dataToPowerSource.push({
+                    STT: index + 1,
+                    ID: individual.vae_id,
+                    name: individual.name.toUpperCase(),
+                    work: 0,
+                    WPoint: 0,
+                    hours: "",
+                    type: "",
+                    fromTo: "",
+                    remark: ""
+                })
             });
+            console.log(dataToPowerSource)
             setPowerSource(dataToPowerSource);
         } else {
             toast.error("No data found")
@@ -710,7 +717,7 @@ const Home = () => {
                 {(flightPlan && WOPlan && powerSource) && (
                     <div className='subPlan-container'>
                         <h3>Station: {serverStation}, Date: {serverDate}, Rev: {rev}</h3>
-                        <table className='table-striped table-bordered' responsive>
+                        <table className='table-bordered' responsive>
                             {/* Flight plan */}
                             <thead>
                                 <tr>
@@ -1234,10 +1241,11 @@ const Home = () => {
                                 {/* B duty */}
                                 <tr>
                                     <th colSpan="4">B 321 duty</th>
-                                    <th colSpan="2">Func</th>
+                                    <th >Func</th>
+                                    <th >Type</th>
                                     <th colSpan="2">Hours</th>
                                 </tr>
-                                {BDuty.map(({ STT, name, func, hours }) => (
+                                {BDuty.map(({ STT, name, func, type, hours }) => (
                                     <tr key={STT}>
                                         <td colSpan="4">
                                             <input
@@ -1250,7 +1258,7 @@ const Home = () => {
                                                 style={{ width: name === "" ? 5 + 'ch' : name.length + 2 + 'ch' }}
                                             />
                                         </td>
-                                        <td colSpan="2">
+                                        <td >
                                             <input
                                                 name="func"
                                                 value={func}
@@ -1258,6 +1266,18 @@ const Home = () => {
                                                 onChange={(e) => onChangeInputBDuty(e, STT)}
                                                 style={{ width: func === "" ? 5 + 'ch' : func.length + 1 + 'ch' }}
                                             />
+                                        </td>
+                                        <td>
+                                            <select
+                                                className='form-select'
+                                                name="type"
+                                                value={type}
+                                                onChange={(e) => onChangeInputBDuty(e, STT)}
+                                                onBlur={() => { updateInput() }}
+                                            >
+                                                <option selected value=""></option>
+                                                <option value="STBY">STBY</option>
+                                            </select>
                                         </td>
                                         <td colSpan="2">
                                             <input
@@ -1331,6 +1351,8 @@ const Home = () => {
                                                 <option value="B">B</option>
                                                 <option value="F">F</option>
                                                 <option value="O">O</option>
+                                                <option value="CT">CT</option>
+                                                <option value="H">H</option>
                                             </select>
                                         </td>
                                         <td >

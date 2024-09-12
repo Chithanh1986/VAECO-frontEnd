@@ -66,7 +66,6 @@ const Resource = (props) => {
         if (response && response.EC === 0) {
             // await setSearchResult(response.DT);
             setTimeout(() => setSearchResult(response.DT), 1);
-            console.log(response.DT)
         } else {
             toast.error(response.EM)
         }

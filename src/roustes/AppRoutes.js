@@ -6,6 +6,7 @@ import UserList from '../components/Users';
 import LoginPage from "../components/LoginPage";
 import ChangePass from "../components/ChangePass";
 import Resource from "../components/Resource";
+import PhaseCheck from "../components/PhaseCheck";
 import { useNavigate } from 'react-router-dom';
 import React, { useContext, useEffect } from 'react';
 import { UserContext } from "../context/UserContext";
@@ -27,6 +28,7 @@ const AppRoutes = (props) => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/flightPlan" element={<FlightPlan />} />
+                <Route path="/phaseCheck" element={<PhaseCheck />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/users" element={<UserList />} />
                 <Route path="/changePass" element={<ChangePass />} />

@@ -43,6 +43,7 @@ const Header = (props) => {
                             <Navbar.Collapse id="basic-navbar-nav">
                                 <Nav activeKey={location.pathname} className="me-auto">
                                     <Nav.Link href="/home" >Flight service</Nav.Link>
+                                    <Nav.Link href="/phaseCheck" >Phase check</Nav.Link>
                                     <Nav.Link href="/pointCode">Point Code</Nav.Link>
 
                                     {user.account.group === "leader" &&

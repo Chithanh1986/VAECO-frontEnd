@@ -100,6 +100,7 @@ const ModalPCUpdate = (props) => {
                                 <option value="PRE">PRE</option>
                                 <option value="TERM-PRE">TERM + PRE</option>
                                 <option value="WO">WO</option>
+                                <option value="EA">EA</option>
                                 <option value="IDR">Indirect</option>
                                 <option value="CCCT">CCCT</option>
                                 <option value="CCDB">CCDB</option>
@@ -107,7 +108,7 @@ const ModalPCUpdate = (props) => {
                         </div>
 
                         <div className=' form-group'>
-                            <label>Max service time (min) :</label>
+                            <label>Max transit time (mins, for long transit) :</label>
                             <input className='form-control' value={pointCode.maxTime}
                                 onChange={(event) => handleOnchangeInput(event.target.value.toUpperCase(), "maxTime")}
                             />
@@ -121,14 +122,14 @@ const ModalPCUpdate = (props) => {
                         </div>
 
                         <div className=' form-group'>
-                            <label>CRS working hour :</label>
+                            <label>CRS working hour (mins) :</label>
                             <input className='form-control' value={pointCode.CRSWHour}
                                 onChange={(event) => handleOnchangeInput(event.target.value, "CRSWHour")}
                             />
                         </div>
 
                         <div className=' form-group'>
-                            <label>MECH working hour :</label>
+                            <label>MECH working hour (mins) :</label>
                             <input className='form-control' value={pointCode.MECHWHour}
                                 onChange={(event) => handleOnchangeInput(event.target.value, "MECHWHour")}
                             />

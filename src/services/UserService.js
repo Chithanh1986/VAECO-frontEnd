@@ -41,7 +41,7 @@ const updateUser = (userData) => {
     userData.division = userData.division.trim();
     userData.station = userData.station.trim();
     userData.group = userData.group.trim();
-    if (userData.remark === undefined) {
+    if (userData.remark === undefined || userData.remark === null) {
         userData.remark = "";
     } else {
         userData.remark = userData.remark.trim();
@@ -107,16 +107,40 @@ const loadPointCode = (page, limit) => {
 }
 
 const updatePointCode = (pointCode) => {
-    pointCode.airline = pointCode.airline.trim();
-    pointCode.code = pointCode.code.trim();
-    pointCode.ACType = pointCode.ACType.toString().trim();
-    pointCode.type = pointCode.type.trim();
-    if (pointCode.maxTime !== "") { pointCode.maxTime = pointCode.maxTime.toString().trim(); }
-    pointCode.remark = pointCode.remark.trim();
-    pointCode.CRSWHour = pointCode.CRSWHour.toString().trim();
-    pointCode.MECHWHour = pointCode.MECHWHour.toString().trim();
-    pointCode.CRSWPoint = pointCode.CRSWPoint.toString().trim();
-    pointCode.MECHWpoint = pointCode.MECHWPoint.toString().trim();
+    if (pointCode.airline === undefined || pointCode.airline === null) {
+        pointCode.airline = "";
+    } else { pointCode.airline = pointCode.airline.trim(); }
+
+    if (pointCode.ACType === undefined || pointCode.ACType === null) {
+        pointCode.ACType = "";
+    } else { pointCode.ACType = pointCode.ACType.toString().trim(); }
+
+    if (pointCode.type === undefined || pointCode.type === null) {
+        pointCode.type = "";
+    } else { pointCode.type = pointCode.type.trim(); }
+
+    if (pointCode.maxTime !== "" && pointCode.maxTime !== null) { pointCode.maxTime = pointCode.maxTime.toString().trim(); }
+
+    if (pointCode.remark === undefined || pointCode.remark === null) {
+        pointCode.remark = "";
+    } else { pointCode.remark = pointCode.remark.trim(); }
+
+    if (pointCode.CRSWHour === undefined || pointCode.CRSWHour === null) {
+        pointCode.CRSWHour = "";
+    } else { pointCode.CRSWHour = pointCode.CRSWHour.toString().trim(); }
+
+    if (pointCode.MECHWHour === undefined || pointCode.MECHWHour === null) {
+        pointCode.MECHWHour = "";
+    } else { pointCode.MECHWHour = pointCode.MECHWHour.toString().trim(); }
+
+    if (pointCode.CRSWPoint === undefined || pointCode.CRSWPoint === null) {
+        pointCode.CRSWPoint = "";
+    } else { pointCode.CRSWPoint = pointCode.CRSWPoint.toString().trim(); }
+
+    if (pointCode.MECHWpoint === undefined || pointCode.MECHWpoint === null) {
+        pointCode.MECHWpoint = "";
+    } else { pointCode.MECHWpoint = pointCode.MECHWpoint.toString().trim(); }
+
     return instance.put("/api/updatePC", { pointCode });
 }
 
@@ -141,8 +165,16 @@ const getPowerData = (date) => {
     return instance.post(`/api/getPowerData`, { date });
 }
 
+const saveEA = (phase) => {
+    return instance.post(`/api/saveEA`, { phase });
+}
+
+const loadEA = (date) => {
+    return instance.post(`/api/loadEA`, { date });
+}
+
 export {
     registerApi, loginApi, fetchAllUsers, deleteUser, resetPassword, updateUser, logoutUser, getUserAccount,
     changePassword, searchApi, flightPlantApi, loadPlanApi, savePlanApi, loadTeamData, createPointCode, loadPointCode,
-    updatePointCode, deletePC, searchPointCode, loadAllPC, getGroupUsers, getPowerData
+    updatePointCode, deletePC, searchPointCode, loadAllPC, getGroupUsers, getPowerData, saveEA, loadEA
 };

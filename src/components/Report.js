@@ -96,12 +96,14 @@ const Report = () => {
             let getTBB = await builtData("TBB", "Tech");
             let getVDH = await builtData("VDH", "Tech");
             let date = startDate.toLocaleDateString('fr-FR').split("/");
+
             for (var i = startDate.getDate(); i <= endDate.getDate(); i++) {
                 let j = i.toString();
                 if (j.length === 1) { j = "0" + j; }
                 let getDate = j + "/" + date[1] + "/" + date[2];
                 let serverData = await getPowerData(getDate);
                 let powerData = serverData.DT;
+
                 for (var k = 0; k < powerData.length; k++) {
                     powerData[k].map((item, index) => {
                         if (item.ID !== "") {
@@ -126,6 +128,7 @@ const Report = () => {
                                     individual.workingPoint = individual.workingPoint + (+item.WPoint);
                                 }
                             })
+
                             getDADTeam4.map((individual, index) => { //search ID in powerSource map with ID in team4
                                 if (item.ID === individual.vae_id) {
                                     individual.assignHours = individual.assignHours + (+item.hours);
@@ -156,35 +159,6 @@ const Report = () => {
                                 }
                             })
                             getCXRTeam4.map((individual, index) => { //search ID in powerSource map with ID in team4
-                                if (item.ID === individual.vae_id) {
-                                    individual.assignHours = individual.assignHours + (+item.hours);
-                                    individual.workingHours = individual.workingHours + (+item.WHour / 60);
-                                    individual.workingPoint = individual.workingPoint + (+item.WPoint);
-                                }
-                            })
-
-                            getDADTeam1.map((individual, index) => { //search ID in powerSource map with ID in team1
-                                if (item.ID === individual.vae_id) {
-                                    individual.assignHours = individual.assignHours + (+item.hours);
-                                    individual.workingHours = individual.workingHours + (+item.WHour / 60);
-                                    individual.workingPoint = individual.workingPoint + (+item.WPoint);
-                                }
-                            })
-                            getDADTeam2.map((individual, index) => { //search ID in powerSource map with ID in team2
-                                if (item.ID === individual.vae_id) {
-                                    individual.assignHours = individual.assignHours + (+item.hours);
-                                    individual.workingHours = individual.workingHours + (+item.WHour / 60);
-                                    individual.workingPoint = individual.workingPoint + (+item.WPoint);
-                                }
-                            })
-                            getDADTeam3.map((individual, index) => { //search ID in powerSource map with ID in team3
-                                if (item.ID === individual.vae_id) {
-                                    individual.assignHours = individual.assignHours + (+item.hours);
-                                    individual.workingHours = individual.workingHours + (+item.WHour / 60);
-                                    individual.workingPoint = individual.workingPoint + (+item.WPoint);
-                                }
-                            })
-                            getDADTeam4.map((individual, index) => { //search ID in powerSource map with ID in team4
                                 if (item.ID === individual.vae_id) {
                                     individual.assignHours = individual.assignHours + (+item.hours);
                                     individual.workingHours = individual.workingHours + (+item.WHour / 60);
