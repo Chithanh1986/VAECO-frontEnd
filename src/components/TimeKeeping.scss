@@ -1,0 +1,30 @@
+.header-container {
+    button {
+        margin-left: 10px;
+        background-color: rgb(238, 235, 235);
+        border-radius: 3px;
+        outline: none;
+        border: none;
+
+        &.active {
+            background-color: #fe2c55;
+            color: white;
+        }
+
+        &:hover {
+            background-color: rgb(210, 208, 208);
+        }
+    }
+}
+
+.users-container {
+    .station-container {
+
+        td.cell1 {
+            // table-layout: fixed;
+            width: 70px;
+            // overflow: hidden;
+            // word-wrap: break-word;
+        }
+    }
+}

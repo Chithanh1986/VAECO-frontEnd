@@ -126,10 +126,11 @@ const Home = () => {
         setWOPlan(null);
         addRow.push({
             STT: No,
+            code: "",
             ACReg: "",
             WONo: "",
             Desc: "",
-            Remark: "",
+            WHour: "",
             CRS: "",
             MECH1: "",
             MECH2: "",
@@ -266,7 +267,13 @@ const Home = () => {
                                     searchRemark = searchACType.find((obj) => obj.type === "TRANSIT" && !obj.remark.includes("RELEASE"));
                                 }
                             }
-                            longTX = getLongTX(ETA, ETD, searchRemark.maxTime);
+                            if (searchRemark) {
+                                longTX = getLongTX(ETA, ETD, searchRemark.maxTime);
+                            } else {
+                                longTX = 0;
+                                let message = "Point code :" + AL + " invalid";
+                                toast.error(message)
+                            }
                         }
                         if (Remark.includes("TERM")) { //chuyen term
                             searchRemark = searchACType.find((obj) => obj.type === "TERM");
@@ -486,10 +493,19 @@ const Home = () => {
                         pointDriverError = 1;
                     } else {
                         if (individual.name.trim() === driver[0].driver.trim()) {
-                            individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[0].hours);
+                            if (driver[0].type === "KN") {
+                                individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) * 1.5 / 12 * (+driver[0].hours);
+                            } else {
+                                individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[0].hours);
+                            }
                             individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[0].hours);
                         }
                         if (individual.name.trim() === driver[1].driver.trim()) {
+                            if (driver[1].type === "KN") {
+                                individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) * 1.5 / 12 * (+driver[1].hours);
+                            } else {
+                                individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[1].hours);
+                            }
                             individual.WPoint = (+individual.WPoint) + (+pointDriver.CRSWPoint) / 12 * (+driver[1].hours);
                             individual.WHour = (+individual.WHour) + (+pointDriver.CRSWHour) / 12 * (+driver[1].hours);
                         }
@@ -566,13 +582,14 @@ const Home = () => {
                     name: individual.name.toUpperCase(),
                     work: 0,
                     WPoint: 0,
+                    WHour: 0,
                     hours: "",
                     type: "",
                     fromTo: "",
                     remark: ""
                 })
             });
-            console.log(dataToPowerSource)
+
             setPowerSource(dataToPowerSource);
         } else {
             toast.error("No data found")
@@ -1010,7 +1027,7 @@ const Home = () => {
                                             placeholder='From to'
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
-                                                leaderData[0].fromTo = e.target.value;
+                                                leaderData[0].fromTo = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
                                             }}
                                             style={{ width: shipLeader[0].fromTo === "" ? "From to".length + 'ch' : shipLeader[0].fromTo.length + 2 + 'ch' }}
@@ -1029,7 +1046,7 @@ const Home = () => {
                                                 leaderData[1].leader = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
                                             }}
-                                            style={{ width: shipLeader[1].leader === "" ? 5 + 'ch' : shipLeader[1].leader.length + 1 + 'ch' }}
+                                            style={{ width: shipLeader[1].leader === "" ? 5 + 'ch' : shipLeader[1].leader.length + 2 + 'ch' }}
                                         />
                                     </td>
                                     <td>
@@ -1053,7 +1070,7 @@ const Home = () => {
                                             type="text"
                                             onChange={(e) => {
                                                 let leaderData = [...shipLeader];
-                                                leaderData[1].fromTo = e.target.value;
+                                                leaderData[1].fromTo = e.target.value.toUpperCase();
                                                 setShipLeader(leaderData);
                                             }}
                                             style={{ width: shipLeader[1].fromTo === "" ? 5 + 'ch' : shipLeader[1].fromTo.length + 2 + 'ch' }}
@@ -1160,7 +1177,7 @@ const Home = () => {
                                             style={{ width: driver[0].hours === "" ? "Hours ".length + 'ch' : driver[0].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td colSpan="2">
+                                    <td>
                                         <input
                                             name="driver1Time"
                                             value={driver[0].fromTo}
@@ -1168,11 +1185,27 @@ const Home = () => {
                                             placeholder='From to'
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[0].fromTo = e.target.value;
+                                                driverData[0].fromTo = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
                                             style={{ width: driver[0].fromTo === "" ? "From to".length + 'ch' : driver[0].fromTo.length + 2 + 'ch' }}
                                         />
+                                    </td>
+                                    <td>
+                                        <select
+                                            className='form-select'
+                                            name="driver1Type"
+                                            value={driver[0].type}
+                                            onChange={(e) => {
+                                                let driverData = [...driver];
+                                                driverData[0].type = e.target.value;
+                                                setDriver(driverData);
+                                            }}
+                                            onBlur={() => { updateInput() }}
+                                        >
+                                            <option selected value=""></option>
+                                            <option value="KN">KN</option>
+                                        </select>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1205,7 +1238,7 @@ const Home = () => {
                                             style={{ width: driver[1].hours === "" ? "Hours ".length + 'ch' : driver[1].hours.length + 2 + 'ch' }}
                                         />
                                     </td>
-                                    <td colSpan="2">
+                                    <td>
                                         <input
                                             name="driver2Time"
                                             value={driver[1].fromTo}
@@ -1214,11 +1247,27 @@ const Home = () => {
                                             onBlur={() => { updateInput() }}
                                             onChange={(e) => {
                                                 let driverData = [...driver];
-                                                driverData[1].fromTo = e.target.value;
+                                                driverData[1].fromTo = e.target.value.toUpperCase();
                                                 setDriver(driverData);
                                             }}
                                             style={{ width: driver[1].fromTo === "" ? "From to".length + 'ch' : driver[1].fromTo.length + 2 + 'ch' }}
                                         />
+                                    </td>
+                                    <td>
+                                        <select
+                                            className='form-select'
+                                            name="driver1Type"
+                                            value={driver[1].type}
+                                            onChange={(e) => {
+                                                let driverData = [...driver];
+                                                driverData[1].type = e.target.value;
+                                                setDriver(driverData);
+                                            }}
+                                            onBlur={() => { updateInput() }}
+                                        >
+                                            <option selected value=""></option>
+                                            <option value="KN">KN</option>
+                                        </select>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1240,14 +1289,14 @@ const Home = () => {
 
                                 {/* B duty */}
                                 <tr>
-                                    <th colSpan="4">B 321 duty</th>
-                                    <th >Func</th>
+                                    <th colSpan="3">B 321 duty</th>
+                                    <th colSpan="2">Func</th>
                                     <th >Type</th>
                                     <th colSpan="2">Hours</th>
                                 </tr>
                                 {BDuty.map(({ STT, name, func, type, hours }) => (
                                     <tr key={STT}>
-                                        <td colSpan="4">
+                                        <td colSpan="3">
                                             <input
                                                 name="name"
                                                 value={name}
@@ -1258,7 +1307,7 @@ const Home = () => {
                                                 style={{ width: name === "" ? 5 + 'ch' : name.length + 2 + 'ch' }}
                                             />
                                         </td>
-                                        <td >
+                                        <td colSpan="2">
                                             <input
                                                 name="func"
                                                 value={func}

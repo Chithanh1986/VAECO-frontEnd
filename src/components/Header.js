@@ -50,6 +50,7 @@ const Header = (props) => {
                                         <>
                                             <Nav.Link href="/Resource">Resource</Nav.Link>
                                             <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
+                                            <Nav.Link href="/timeKeeping">TimeKeeping</Nav.Link>
                                         </>
                                     }
 
@@ -57,6 +58,7 @@ const Header = (props) => {
                                         <>
                                             <Nav.Link href="/Resource">Resource</Nav.Link>
                                             <Nav.Link href="/FlightPlan">Flight plan</Nav.Link>
+                                            <Nav.Link href="/timeKeeping">TimeKeeping</Nav.Link>
                                             <NavDropdown title="Admin" id="basic-nav-dropdown">
                                                 <NavDropdown.Item href="/register">Register</NavDropdown.Item>
                                                 <NavDropdown.Item href="/users">Manage users</NavDropdown.Item>

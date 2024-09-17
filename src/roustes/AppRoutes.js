@@ -7,6 +7,7 @@ import LoginPage from "../components/LoginPage";
 import ChangePass from "../components/ChangePass";
 import Resource from "../components/Resource";
 import PhaseCheck from "../components/PhaseCheck";
+import TimeKeeping from "../components/TimeKeeping";
 import { useNavigate } from 'react-router-dom';
 import React, { useContext, useEffect } from 'react';
 import { UserContext } from "../context/UserContext";
@@ -35,6 +36,7 @@ const AppRoutes = (props) => {
                 <Route path="/resource" element={<Resource />} />
                 <Route path="/pointCode" element={<PointCode />} />
                 <Route path="/report" element={<Report />} />
+                <Route path="/timeKeeping" element={<TimeKeeping />} />
             </Routes>
         </>
     )

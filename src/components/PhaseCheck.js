@@ -136,7 +136,7 @@ const PhaseCheck = () => {
                         WHour: pointHour.hour,
                         hours: 8,
                         type: "",
-                        fromTo: ""
+                        fromTo: "EA"
                     })
                 }
             }
@@ -222,52 +222,56 @@ const PhaseCheck = () => {
     }
 
     const handleExport = () => {
-        let exportData = [
-            ["Title", title],
-            ["Rev", rev],
-            ["JOB", "NAME", "VAE ID", "AUTH.", "DEP.", "OTHER JOBS", "REMARK"]
-        ]
-        general.map((individual, index) => {
+        if (date) {
+            let exportData = [
+                ["Title", title],
+                ["Rev", rev],
+                ["JOB", "NAME", "VAE ID", "AUTH.", "DEP.", "OTHER JOBS", "REMARK"]
+            ]
+            general.map((individual, index) => {
+                exportData.push([
+                    individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                ])
+            })
+            zone128.map((individual, index) => {
+                exportData.push([
+                    individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                ])
+            })
+            zone34567.map((individual, index) => {
+                exportData.push([
+                    individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                ])
+            })
+            zoneAvi.map((individual, index) => {
+                exportData.push([
+                    individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                ])
+            })
+            engRun.map((individual, index) => {
+                exportData.push([
+                    individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                ])
+            })
             exportData.push([
-                individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
+                structure.job, structure.name, structure.ID, structure.auth, structure.dep, structure.other, structure.remark
             ])
-        })
-        zone128.map((individual, index) => {
-            exportData.push([
-                individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
-            ])
-        })
-        zone34567.map((individual, index) => {
-            exportData.push([
-                individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
-            ])
-        })
-        zoneAvi.map((individual, index) => {
-            exportData.push([
-                individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
-            ])
-        })
-        engRun.map((individual, index) => {
-            exportData.push([
-                individual.job, individual.name, individual.ID, individual.auth, individual.dep, individual.other, individual.remark
-            ])
-        })
-        exportData.push([
-            structure.job, structure.name, structure.ID, structure.auth, structure.dep, structure.other, structure.remark
-        ])
-        const worksheet = XLSX.utils.aoa_to_sheet(exportData);
-        let merge = [
-            { s: { r: 0, c: 1 }, e: { r: 0, c: 6 } },
-            { s: { r: 1, c: 1 }, e: { r: 1, c: 6 } },
-            { s: { r: 7, c: 0 }, e: { r: 12, c: 0 } },
-            { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
-            { s: { r: 19, c: 0 }, e: { r: 22, c: 0 } },
-            { s: { r: 23, c: 0 }, e: { r: 24, c: 0 } }
-        ]
-        worksheet["!merges"] = merge;
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-        XLSX.writeFile(workbook, "phaseCheck.xlsx");
+            const worksheet = XLSX.utils.aoa_to_sheet(exportData);
+            let merge = [
+                { s: { r: 0, c: 1 }, e: { r: 0, c: 6 } },
+                { s: { r: 1, c: 1 }, e: { r: 1, c: 6 } },
+                { s: { r: 7, c: 0 }, e: { r: 12, c: 0 } },
+                { s: { r: 13, c: 0 }, e: { r: 18, c: 0 } },
+                { s: { r: 19, c: 0 }, e: { r: 22, c: 0 } },
+                { s: { r: 23, c: 0 }, e: { r: 24, c: 0 } }
+            ]
+            worksheet["!merges"] = merge;
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+            XLSX.writeFile(workbook, "phaseCheck.xlsx");
+        } else {
+            toast.error("Please select date")
+        }
     }
 
     return (
@@ -285,7 +289,7 @@ const PhaseCheck = () => {
                     onClick={() => handleLoad()}>Load</button>
                 <button className='btn'
                     onClick={() => handleSave()}>Save</button>
-                <button className='btn'
+                <button className='btn info'
                     onClick={() => handleExport()}>Export</button>
             </div>
 

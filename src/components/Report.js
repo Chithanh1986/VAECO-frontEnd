@@ -230,24 +230,28 @@ const Report = () => {
 
             getDADTeam1.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getDADTeam2.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getDADTeam3.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getDADTeam4.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
@@ -255,24 +259,28 @@ const Report = () => {
 
             getCXRTeam1.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getCXRTeam2.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getCXRTeam3.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getCXRTeam4.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
@@ -280,24 +288,28 @@ const Report = () => {
 
             getPKT.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getStore.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getHUI.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getPXU.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
@@ -305,24 +317,28 @@ const Report = () => {
 
             getUIH.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getVCL.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getTBB.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
             })
             getVDH.map((individual, index) => {
                 individual.workingHours = individual.workingHours.toFixed(1);
+                individual.workingPoint = individual.workingPoint.toFixed(2);
                 if (individual.assignHours !== 0) {
                     individual.efficiency = (individual.workingHours / individual.assignHours).toFixed(2);
                 }
