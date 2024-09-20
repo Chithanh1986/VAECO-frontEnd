@@ -180,7 +180,8 @@ const Home = () => {
                 startTime = 960;
                 endTime = 1680;
             }
-        } else {
+        }
+        if (station === "CXR") {
             if (ship === "MO") {
                 startTime = 420;
                 endTime = 1140;
@@ -313,13 +314,13 @@ const Home = () => {
             } else {
                 switch (code.trim()) {
                     case "NRCB":
-                        CRSWPoint = +WHour / 60 * 2;
+                        CRSWPoint = +WHour / 60 * 1.6;
                         MECHWPoint = +WHour / 60;
                         CRSWHour = +WHour;
                         MECHWHour = +WHour;
                         break;
                     case "NRCA":
-                        CRSWPoint = +WHour / 60 * 1.5;
+                        CRSWPoint = +WHour / 60 * 1.2;
                         MECHWPoint = +WHour / 60;
                         CRSWHour = +WHour;
                         MECHWHour = +WHour;

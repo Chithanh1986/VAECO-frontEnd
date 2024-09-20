@@ -19,7 +19,7 @@ function FlightPlan() {
         document.getElementById('file').value = '';
     }
 
-    const handleSplitShip = (newData, date, shipTime) => {
+    const handleSplitShip = (rawData, date, shipTime) => {
 
         let rev = new Date().toLocaleDateString('fr-FR') + " Time " + new Date().toLocaleTimeString('fr-FR');
         //get flight data for morning ship
@@ -30,6 +30,11 @@ function FlightPlan() {
             flightData: [],
         }
         let elementNo1 = 0;
+        let newData = [];
+        rawData.map((individual, index) => {
+            if (individual[0] !== undefined) newData.push(individual);
+        })
+
         for (var i = 0; i < newData.length; i++) {
             let arrHour = parseInt(newData[i][7].split(":")[0], 10);
             let depHour = parseInt(newData[i][8].split(":")[0], 10);
